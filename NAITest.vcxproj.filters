@@ -8,6 +8,12 @@
     <ClCompile Include="goap\PlannerTest.cpp">
       <Filter>goap</Filter>
     </ClCompile>
+    <ClCompile Include="goap\GoToActionTest.cpp">
+      <Filter>goap</Filter>
+    </ClCompile>
+    <ClCompile Include="goap\AgentTest.cpp">
+      <Filter>goap</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />

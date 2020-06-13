@@ -7,12 +7,14 @@
 #include "../../NAI/source/goap/IPredicate.h"
 #include "../../NAI/source/goap/BasePredicate.h"
 
+using namespace NAI::Goap;
+
 TEST(NAI_GoalPlanner, When_NoPredicates_Then_NoPlan) 
 {
-	std::vector<std::shared_ptr<NAI::IGoal>> goals;
-	std::vector<std::shared_ptr<NAI::IPredicate>> predicates;
+	std::vector<std::shared_ptr<IGoal>> goals;
+	std::vector<std::shared_ptr<IPredicate>> predicates;
 
-	auto planner = std::make_shared<NAI::GoapPlanner>();
+	auto planner = std::make_shared<GoapPlanner>();
 
 	auto plan = planner->GetPlan(goals, predicates);
 
@@ -21,12 +23,12 @@ TEST(NAI_GoalPlanner, When_NoPredicates_Then_NoPlan)
 
 TEST(NAI_GoalPlanner, When_PredicatesButNoGoals_Then_NoPlan)
 {
-	std::vector<std::shared_ptr<NAI::IGoal>> goals;
-	std::vector<std::shared_ptr<NAI::IPredicate>> predicates;
+	std::vector<std::shared_ptr<IGoal>> goals;
+	std::vector<std::shared_ptr<IPredicate>> predicates;
 
-	predicates.push_back(std::make_shared<NAI::BasePredicate>("A"));
+	predicates.push_back(std::make_shared<BasePredicate>("A"));
 
-	auto planner = std::make_shared<NAI::GoapPlanner>();
+	auto planner = std::make_shared<GoapPlanner>();
 
 	auto plan = planner->GetPlan(goals, predicates);
 
@@ -35,23 +37,23 @@ TEST(NAI_GoalPlanner, When_PredicatesButNoGoals_Then_NoPlan)
 
 TEST(NAI_GoalPlanner, When_PredicatesAnGoalsButNoSatisfied_Then_NoPlan)
 {
-	std::vector<std::shared_ptr<NAI::IGoal>> goals;
-	std::vector<std::shared_ptr<NAI::IPredicate>> predicates;
+	std::vector<std::shared_ptr<IGoal>> goals;
+	std::vector<std::shared_ptr<IPredicate>> predicates;
 
-	auto predicateA = std::make_shared<NAI::BasePredicate>("A");
-	auto predicateB = std::make_shared<NAI::BasePredicate>("B");
-	auto predicateC = std::make_shared<NAI::BasePredicate>("C");
+	auto predicateA = std::make_shared<BasePredicate>("A");
+	auto predicateB = std::make_shared<BasePredicate>("B");
+	auto predicateC = std::make_shared<BasePredicate>("C");
 	predicates.push_back(predicateA);
 
-	std::vector<std::shared_ptr<NAI::IPredicate>> preconditions = { predicateB };
-	std::vector<std::shared_ptr<NAI::IPredicate>> postconditions = { predicateC };
-	std::vector<std::shared_ptr<NAI::IAction>> actions;
-	actions.push_back(std::make_shared<NAI::BaseAction>(preconditions, postconditions));
+	std::vector<std::shared_ptr<IPredicate>> preconditions = { predicateB };
+	std::vector<std::shared_ptr<IPredicate>> postconditions = { predicateC };
+	std::vector<std::shared_ptr<IAction>> actions;
+	actions.push_back(std::make_shared<BaseAction>(preconditions, postconditions));
 
-	auto goal = std::make_shared<NAI::BaseGoal>(actions);
+	auto goal = std::make_shared<BaseGoal>(actions);
 	goals.push_back(goal);
 
-	auto planner = std::make_shared<NAI::GoapPlanner>();
+	auto planner = std::make_shared<GoapPlanner>();
 	auto plan = planner->GetPlan(goals, predicates);
 
 	ASSERT_EQ(plan, nullptr);
@@ -59,19 +61,19 @@ TEST(NAI_GoalPlanner, When_PredicatesAnGoalsButNoSatisfied_Then_NoPlan)
 
 TEST(NAI_GoalPlanner, When_OnePredicateMatchesPreconditionOfAnActionOfOneActionGoal_Then_Plan)
 {
-	std::vector<std::shared_ptr<NAI::IAction>> actions;
-	std::vector<std::shared_ptr<NAI::IPredicate>> predicates;
-	std::vector<std::shared_ptr<NAI::IGoal>> goals;
+	std::vector<std::shared_ptr<IAction>> actions;
+	std::vector<std::shared_ptr<IPredicate>> predicates;
+	std::vector<std::shared_ptr<IGoal>> goals;
 
-	auto predicate = std::make_shared<NAI::BasePredicate>("A");
+	auto predicate = std::make_shared<BasePredicate>("A");
 	predicates.push_back(predicate);
 
-	actions.push_back(std::make_shared<NAI::BaseAction>(predicates, predicates));
+	actions.push_back(std::make_shared<BaseAction>(predicates, predicates));
 
-	auto goal = std::make_shared<NAI::BaseGoal>(actions);
+	auto goal = std::make_shared<BaseGoal>(actions);
 	goals.push_back(goal);
 
-	auto planner = std::make_shared<NAI::GoapPlanner>();
+	auto planner = std::make_shared<GoapPlanner>();
 
 	auto plan = planner->GetPlan(goals, predicates);
 
@@ -80,28 +82,28 @@ TEST(NAI_GoalPlanner, When_OnePredicateMatchesPreconditionOfAnActionOfOneActionG
 
 TEST(NAI_GoalPlanner, When_OnePredicateChainsOneActionAndThatActionAnotherOfTheSameGoal_Then_TwoActionsGoalPlan)
 {
-	std::vector<std::shared_ptr<NAI::IAction>> actions;
-	std::vector<std::shared_ptr<NAI::IPredicate>> predicates;
-	std::vector<std::shared_ptr<NAI::IGoal>> goals;
+	std::vector<std::shared_ptr<IAction>> actions;
+	std::vector<std::shared_ptr<IPredicate>> predicates;
+	std::vector<std::shared_ptr<IGoal>> goals;
 
-	auto predicateA = std::make_shared<NAI::BasePredicate>("A");
-	auto predicateB = std::make_shared<NAI::BasePredicate>("B");
-	auto predicateC = std::make_shared<NAI::BasePredicate>("C");
+	auto predicateA = std::make_shared<BasePredicate>("A");
+	auto predicateB = std::make_shared<BasePredicate>("B");
+	auto predicateC = std::make_shared<BasePredicate>("C");
 
 	predicates.push_back(predicateA);
 
-	std::vector<std::shared_ptr<NAI::IPredicate>> preconditions = { predicateB };
-	std::vector<std::shared_ptr<NAI::IPredicate>> postconditions = { predicateC };
-	actions.push_back(std::make_shared<NAI::BaseAction>(preconditions, postconditions));
+	std::vector<std::shared_ptr<IPredicate>> preconditions = { predicateB };
+	std::vector<std::shared_ptr<IPredicate>> postconditions = { predicateC };
+	actions.push_back(std::make_shared<BaseAction>(preconditions, postconditions));
 	
 	preconditions = { predicateA };
 	postconditions = { predicateB };
-	actions.push_back(std::make_shared<NAI::BaseAction>(preconditions, postconditions));
+	actions.push_back(std::make_shared<BaseAction>(preconditions, postconditions));
 
-	auto goal = std::make_shared<NAI::BaseGoal>(actions);
+	auto goal = std::make_shared<BaseGoal>(actions);
 	goals.push_back(goal);
 
-	auto planner = std::make_shared<NAI::GoapPlanner>();
+	auto planner = std::make_shared<GoapPlanner>();
 
 	auto plan = planner->GetPlan(goals, predicates);
 
@@ -113,31 +115,31 @@ TEST(NAI_GoalPlanner, When_TwoGoalsAreSatisfied_Then_LessCostGoalPlan)
 	int costActionGoal1 = 3;
 	int costActionGoal2 = 1;
 
-	auto predicateA = std::make_shared<NAI::BasePredicate>("A");
-	auto predicateB = std::make_shared<NAI::BasePredicate>("B");
-	auto predicateC = std::make_shared<NAI::BasePredicate>("C");
+	auto predicateA = std::make_shared<BasePredicate>("A");
+	auto predicateB = std::make_shared<BasePredicate>("B");
+	auto predicateC = std::make_shared<BasePredicate>("C");
 
-	std::vector<std::shared_ptr<NAI::IGoal>> goals;
+	std::vector<std::shared_ptr<IGoal>> goals;
 
-	std::vector<std::shared_ptr<NAI::IAction>> actions;
-	std::vector<std::shared_ptr<NAI::IPredicate>> preconditions = { predicateB };
-	std::vector<std::shared_ptr<NAI::IPredicate>> postconditions = { predicateC };
-	actions.push_back(std::make_shared<NAI::BaseAction>(preconditions, postconditions, costActionGoal1));
+	std::vector<std::shared_ptr<IAction>> actions;
+	std::vector<std::shared_ptr<IPredicate>> preconditions = { predicateB };
+	std::vector<std::shared_ptr<IPredicate>> postconditions = { predicateC };
+	actions.push_back(std::make_shared<BaseAction>(preconditions, postconditions, costActionGoal1));
 
-	auto goal = std::make_shared<NAI::BaseGoal>(actions);
+	auto goal = std::make_shared<BaseGoal>(actions);
 	goals.push_back(goal);
 
 	preconditions = { predicateA };
 	postconditions = { predicateC };
 	actions = {};
-	actions.push_back(std::make_shared<NAI::BaseAction>(preconditions, postconditions, costActionGoal2));
+	actions.push_back(std::make_shared<BaseAction>(preconditions, postconditions, costActionGoal2));
 
-	goal = std::make_shared<NAI::BaseGoal>(actions);
+	goal = std::make_shared<BaseGoal>(actions);
 	goals.push_back(goal);
 
-	auto planner = std::make_shared<NAI::GoapPlanner>();
+	auto planner = std::make_shared<GoapPlanner>();
 
-	std::vector<std::shared_ptr<NAI::IPredicate>> predicates;
+	std::vector<std::shared_ptr<IPredicate>> predicates;
 	predicates.push_back(predicateA);
 	predicates.push_back(predicateB);
 
