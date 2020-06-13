@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="goap\ActionTest.cpp">
+      <Filter>goap</Filter>
+    </ClCompile>
+    <ClCompile Include="goap\PlannerTest.cpp">
+      <Filter>goap</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="goap">
+      <UniqueIdentifier>{593522ff-5a2f-4f35-af5c-632d8ef0a2a7}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
