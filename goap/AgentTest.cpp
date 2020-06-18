@@ -1,31 +1,66 @@
-#include "pchTest.h"
+#include "gtest/gtest.h"
+#include "gmock/gmock.h"
 #include "source/goap/agent/IAgent.h"
 #include "source/goap/agent/BaseAgent.h"
-#include "source/goap/GoapPlanner.h"
+#include "source/goap/BaseGoal.h"
+#include "source/goap/BasePredicate.h"
+#include "source/goap/BaseAction.h"
+#include "source/goap/IGoapPlanner.h"
 
 
 using namespace NAI::Goap;
+using ::testing::NiceMock;
 
-
-class GoapPlannerMock : public GoapPlanner
+class GoapPlannerMock : public IGoapPlanner
 {
 public:
 	GoapPlannerMock()
 	{
-		//ON_CALL(*this, GetID()).WillByDefault(Return(id));
+		ON_CALL(*this, GetPlan).WillByDefault(
+		[this](	std::vector<std::shared_ptr<IGoal>>& goals,	std::vector<std::shared_ptr<IPredicate>>& predicates)
+		{
+			auto predicateA = std::make_shared<BasePredicate>("A");
+			auto predicateB = std::make_shared<BasePredicate>("B");
+
+			std::vector<std::shared_ptr<IPredicate>> preconditions = { predicateA };
+			std::vector<std::shared_ptr<IPredicate>> postconditions = { predicateB };
+			std::vector<std::shared_ptr<IAction>> actions;
+			actions.push_back(std::make_shared<BaseAction>(preconditions, postconditions));
+
+			return std::make_shared<BaseGoal>(actions);
+		});
 	}
 	virtual ~GoapPlannerMock() = default;
 
-	//MOCK_CONST_METHOD0(GetTest, bool());
-	/*MOCK_CONST_METHOD2(GetPlan, 
+	MOCK_CONST_METHOD2(GetPlan, 
 		std::shared_ptr<IGoal>(
 			std::vector<std::shared_ptr<IGoal>>&, 
-			std::vector<std::shared_ptr<IPredicate>>&));*/
+			std::vector<std::shared_ptr<IPredicate>>&));
+};
+
+class EmptyGoapPlannerMock : public IGoapPlanner
+{
+public:
+	EmptyGoapPlannerMock()
+	{
+		ON_CALL(*this, GetPlan).WillByDefault(
+			[this](std::vector<std::shared_ptr<IGoal>>& goals, std::vector<std::shared_ptr<IPredicate>>& predicates)
+			{
+				return nullptr;
+			});
+	}
+	virtual ~EmptyGoapPlannerMock() = default;
+
+	MOCK_CONST_METHOD2(GetPlan,
+		std::shared_ptr<IGoal>(
+			std::vector<std::shared_ptr<IGoal>>&,
+			std::vector<std::shared_ptr<IPredicate>>&));
 };
 
 TEST(NAI_Agent, When_Start_Then_AgentIsPlanning) 
 {
-	std::shared_ptr<IAgent> agent = std::make_shared<BaseAgent>();
+	auto goapPlannerMock = std::make_shared<NiceMock<EmptyGoapPlannerMock>>();
+	std::shared_ptr<IAgent> agent = std::make_shared<BaseAgent>(goapPlannerMock);
 
 	agent->Update(0.0f);
 
@@ -34,19 +69,31 @@ TEST(NAI_Agent, When_Start_Then_AgentIsPlanning)
 
 TEST(NAI_Agent, When_Planning_Then_GetPlan)
 {
-	std::shared_ptr<IAgent> agent = std::make_shared<BaseAgent>();
+	auto goapPlannerMock = std::make_shared<NiceMock<GoapPlannerMock>>();
+	std::shared_ptr<IAgent> agent = std::make_shared<BaseAgent>(goapPlannerMock);
+
+	EXPECT_CALL(*goapPlannerMock, GetPlan).Times(1);
 
 	agent->Update(0.0f);
-
-	//call getPlan of goal planner
-	//ASSERT_TRUE();
 }
 
 TEST(NAI_Agent, When_Plan_Then_Process)
 {
-	std::shared_ptr<IAgent> agent = std::make_shared<BaseAgent>();
+	auto goapPlannerMock = std::make_shared<NiceMock<GoapPlannerMock>>();
+	std::shared_ptr<IAgent> agent = std::make_shared<BaseAgent>(goapPlannerMock);
 
-	agent->Update(0.0f);
-
+	agent->Update(0.0f); //-->get a plan changing state processing
+	
 	ASSERT_TRUE(agent->GetCurrentState() == AgentState::STATE_PROCESSING);
+}
+
+TEST(NAI_Agent, When_ProcessingAndPlanFinished_Then_Planning)
+{
+	auto goapPlannerMock = std::make_shared<NiceMock<GoapPlannerMock>>();
+	std::shared_ptr<IAgent> agent = std::make_shared<BaseAgent>(goapPlannerMock);
+
+	agent->Update(0.0f); //-->get a plan changing state processing
+	agent->Update(0.0f); //now it's processing and finishes plan
+
+	ASSERT_TRUE(agent->GetCurrentState() == AgentState::STATE_PLANNING);
 }

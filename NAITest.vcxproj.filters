@@ -16,6 +16,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\lib\native\src\gtest\gtest-all.cc" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\lib\native\src\gmock\gmock-all.cc" />
     <ClCompile Include="pchTest.cpp" />
+    <ClCompile Include="..\NGenius\packages\gmock.1.10.0\lib\native\src\gtest\src\gtest_main.cc" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

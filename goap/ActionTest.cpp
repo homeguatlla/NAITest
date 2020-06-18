@@ -1,4 +1,5 @@
-#include "pchTest.h"
+//#include "pchTest.h"
+#include "gtest/gtest.h"
 #include "source/goap/IAction.h"
 #include "source/goap/BaseAction.h"
 #include "source/goap/IPredicate.h"

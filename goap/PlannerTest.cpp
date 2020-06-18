@@ -1,4 +1,4 @@
-#include "pchTest.h"
+#include "gtest/gtest.h"
 #include "source/goap/GoapPlanner.h"
 #include "source/goap/IGoal.h"
 #include "source/goap/BaseGoal.h"
