@@ -1,7 +1,7 @@
-#include "pch.h"
-#include "../../NAI/source/goap/IAction.h"
-#include "../../NAI/source/goap/BaseAction.h"
-#include "../../NAI/source/goap/IPredicate.h"
+#include "pchTest.h"
+#include "source/goap/IAction.h"
+#include "source/goap/BaseAction.h"
+#include "source/goap/IPredicate.h"
 
 #include <memory>
 

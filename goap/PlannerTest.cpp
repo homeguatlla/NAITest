@@ -1,11 +1,11 @@
-#include "pch.h"
-#include "../../NAI/source/goap/GoapPlanner.h"
-#include "../../NAI/source/goap/IGoal.h"
-#include "../../NAI/source/goap/BaseGoal.h"
-#include "../../NAI/source/goap/IAction.h"
-#include "../../NAI/source/goap/BaseAction.h"
-#include "../../NAI/source/goap/IPredicate.h"
-#include "../../NAI/source/goap/BasePredicate.h"
+#include "pchTest.h"
+#include "source/goap/GoapPlanner.h"
+#include "source/goap/IGoal.h"
+#include "source/goap/BaseGoal.h"
+#include "source/goap/IAction.h"
+#include "source/goap/BaseAction.h"
+#include "source/goap/IPredicate.h"
+#include "source/goap/BasePredicate.h"
 
 using namespace NAI::Goap;
 
