@@ -43,20 +43,20 @@ class TwoActionGoapPlannerMock : public IGoapPlanner
 public:
 	TwoActionGoapPlannerMock()
 	{
+		predicateA = std::make_shared<BasePredicate>("A");
+		predicateB = std::make_shared<BasePredicate>("B");
+		predicateC = std::make_shared<BasePredicate>("C");
+
 		ON_CALL(*this, GetPlan).WillByDefault(
 			[this](std::vector<std::shared_ptr<IGoal>>& goals, std::vector<std::shared_ptr<IPredicate>>& predicates)
 			{
-				auto predicateA = std::make_shared<BasePredicate>("A");
-				auto predicateB = std::make_shared<BasePredicate>("B");
-				auto predicateC = std::make_shared<BasePredicate>("C");
-
-				std::vector<std::shared_ptr<IPredicate>> preconditions = { predicateB };
-				std::vector<std::shared_ptr<IPredicate>> postconditions = { predicateC };
+				std::vector<std::shared_ptr<IPredicate>> preconditions = { predicateA };
+				std::vector<std::shared_ptr<IPredicate>> postconditions = { predicateB };
 				std::vector<std::shared_ptr<IAction>> actions;
 				actions.push_back(std::make_shared<BaseAction>(preconditions, postconditions));
 
-				preconditions = { predicateA };
-				postconditions = { predicateB };
+				preconditions = { predicateB };
+				postconditions = { predicateC };
 				actions.push_back(std::make_shared<BaseAction>(preconditions, postconditions));
 
 				return std::make_shared<BaseGoal>(actions);
@@ -67,6 +67,8 @@ public:
 		std::shared_ptr<IGoal>(
 			std::vector<std::shared_ptr<IGoal>>&,
 			std::vector<std::shared_ptr<IPredicate>>&));
+
+	std::shared_ptr<IPredicate> predicateA, predicateB, predicateC;
 };
 
 class EmptyGoapPlannerMock : public IGoapPlanner
@@ -124,7 +126,7 @@ TEST(NAI_Agent, When_Plan_Then_Process)
 TEST(NAI_Agent, When_ProcessingAndPlanFinished_Then_Planning)
 {
 	auto goapPlannerMock = std::make_shared<NiceMock<TwoActionGoapPlannerMock>>();
-	std::vector<std::shared_ptr<IPredicate>> predicates = { std::make_shared<BasePredicate>("A") };
+	std::vector<std::shared_ptr<IPredicate>> predicates = { goapPlannerMock->predicateA };
 	std::shared_ptr<IAgent> agent = std::make_shared<BaseAgent>(goapPlannerMock, predicates);
 
 	agent->Update(0.0f); //-->get a plan changing state processing
@@ -132,6 +134,21 @@ TEST(NAI_Agent, When_ProcessingAndPlanFinished_Then_Planning)
 	agent->Update(0.0f); //now it's processing second action and finishes plan
 
 	ASSERT_TRUE(agent->GetCurrentState() == AgentState::STATE_PLANNING);
+}
+
+TEST(NAI_Agent, When_ProcessingAndPlanFinished_Then_PostConditionAddedToPredicatesList)
+{
+	auto goapPlannerMock = std::make_shared<NiceMock<TwoActionGoapPlannerMock>>();
+	std::vector<std::shared_ptr<IPredicate>> predicates = { goapPlannerMock->predicateA };
+	std::shared_ptr<IAgent> agent = std::make_shared<BaseAgent>(goapPlannerMock, predicates);
+
+	ASSERT_FALSE(agent->HasPredicate(goapPlannerMock->predicateC->GetID()));
+
+	agent->Update(0.0f); //-->get a plan changing state processing
+	agent->Update(0.0f); //now it's processing first action
+	agent->Update(0.0f); //now it's processing second action and finishes plan
+
+	ASSERT_TRUE(agent->HasPredicate(goapPlannerMock->predicateC->GetID()));
 }
 
 TEST(NAI_Agent, When_ProcessingAndPlanAborted_Then_Planning)
@@ -140,13 +157,32 @@ TEST(NAI_Agent, When_ProcessingAndPlanAborted_Then_Planning)
 	std::vector<std::shared_ptr<IPredicate>> predicates = { std::make_shared<BasePredicate>("D") };
 	std::shared_ptr<IAgent> agent = std::make_shared<BaseAgent>(goapPlannerMock, predicates);
 
-	agent->Update(0.0f); //-->get a plan changing state processing
-	agent->Update(0.0f); //now it's processing first action
-	agent->Update(0.0f); //now it's processing second action and finishes plan
+	ASSERT_FALSE(agent->HasPredicate(goapPlannerMock->predicateC->GetID()));
 
+	agent->Update(0.0f); //-->get a plan changing state processing
+	agent->Update(0.0f); //now it's processing but no actions to process then abort plan
+
+	ASSERT_FALSE(agent->HasPredicate(goapPlannerMock->predicateC->GetID()));
 	ASSERT_TRUE(agent->GetCurrentState() == AgentState::STATE_PLANNING);
 }
 
-//comprobar que sucede si se aborta una accion porque hay otra más importante porque ha llegado un evento, replanificar.
-//comprobar que se resuelven todas las acciones del plan y los predicados crecen
-//comprobar que si no se puede realizar una acción hay que abortar y replanificar.
+TEST(NAI_Agent, When_ProcessingAPlanAndNewPredicatesAddedIntoThePredicates_Then_Planning)
+{
+	auto goapPlannerMock = std::make_shared<NiceMock<TwoActionGoapPlannerMock>>();
+	std::vector<std::shared_ptr<IPredicate>> predicates = { goapPlannerMock->predicateA };
+	std::shared_ptr<IAgent> agent = std::make_shared<BaseAgent>(goapPlannerMock, predicates);
+
+
+	EXPECT_CALL(*goapPlannerMock, GetPlan).Times(1);
+	ASSERT_FALSE(agent->HasPredicate(goapPlannerMock->predicateC->GetID()));
+
+	agent->Update(0.0f); //-->get a plan changing state processing
+	agent->Update(0.0f); //now it's processing the first action
+	
+	agent->OnNewPredicate(goapPlannerMock->predicateC);
+	
+	agent->Update(0.0f); //as new predicate arrived, abort and planning
+
+	ASSERT_TRUE(agent->HasPredicate(goapPlannerMock->predicateC->GetID()));
+	ASSERT_TRUE(agent->GetCurrentState() == AgentState::STATE_PLANNING);
+}

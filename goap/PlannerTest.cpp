@@ -65,10 +65,13 @@ TEST(NAI_GoalPlanner, When_OnePredicateMatchesPreconditionOfAnActionOfOneActionG
 	std::vector<std::shared_ptr<IPredicate>> predicates;
 	std::vector<std::shared_ptr<IGoal>> goals;
 
-	auto predicate = std::make_shared<BasePredicate>("A");
-	predicates.push_back(predicate);
+	auto predicateA = std::make_shared<BasePredicate>("A");
+	auto predicateB = std::make_shared<BasePredicate>("B");
+	predicates.push_back(predicateA);
 
-	actions.push_back(std::make_shared<BaseAction>(predicates, predicates));
+	std::vector<std::shared_ptr<IPredicate>> preconditions = { predicateA };
+	std::vector<std::shared_ptr<IPredicate>> postconditions = { predicateB };
+	actions.push_back(std::make_shared<BaseAction>(preconditions, postconditions));
 
 	auto goal = std::make_shared<BaseGoal>(actions);
 	goals.push_back(goal);
