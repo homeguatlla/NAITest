@@ -110,7 +110,9 @@ TEST(NAI_GoalPlanner, When_OnePredicateChainsOneActionAndThatActionAnotherOfTheS
 
 	auto plan = planner->GetPlan(goals, predicates);
 
-	ASSERT_TRUE(plan->GetActions().size() == 2);
+	ASSERT_TRUE(plan->GetNextAction() != nullptr);
+	ASSERT_TRUE(plan->GetNextAction() != nullptr);
+	ASSERT_TRUE(plan->GetNextAction() == nullptr);
 }
 
 TEST(NAI_GoalPlanner, When_TwoGoalsAreSatisfied_Then_LessCostGoalPlan)

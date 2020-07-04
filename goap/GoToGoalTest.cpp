@@ -13,6 +13,25 @@
 
 using namespace NAI::Goap;
 using namespace NAI::Navigation;
+using ::testing::NiceMock;
+
+
+class AgentMock : public BaseAgent
+{
+public:
+	AgentMock(std::shared_ptr<IGoapPlanner> goapPlanner,
+		std::vector<std::shared_ptr<IGoal>>& goals,
+		std::vector<std::shared_ptr<IPredicate>>& predicates) : BaseAgent(goapPlanner, goals, predicates)
+	{
+	}
+
+	virtual ~AgentMock() = default;
+
+	glm::vec3 GetPosition() const override { return position; }
+
+private:
+	glm::vec3 position;
+};
 
 class NavigationPathMock : public INavigationPath
 {
@@ -52,7 +71,7 @@ public:
 		ON_CALL(*this, GetPathFromTo).WillByDefault(
 			[this](const glm::vec3& origin, const glm::vec3& destination, std::function<void(std::shared_ptr<INavigationPath>)> callback)
 			{
-				callback(std::make_shared<NavigationPathMock>());
+				callback(std::make_shared<NiceMock<NavigationPathMock>>());
 			});
 	}
 	virtual ~NavigationPlannerMock() = default;
@@ -64,27 +83,30 @@ public:
 
 TEST(NAI_GoToGoalTest, When_AgentHasToGo_Then_Arrives)
 {
-	auto goapPlanner = std::make_shared<GoapPlanner>();
-	auto navigationPlanner = std::make_shared<NavigationPlannerMock>();
+	auto goapPlanner = std::make_shared<NiceMock<GoapPlanner>>();
+	auto navigationPlanner = std::make_shared<NiceMock<NavigationPlannerMock>>();
 
 	std::vector<std::shared_ptr<IPredicate>> predicates;
 	predicates.push_back(std::make_shared<GoToPredicate>("GoToSaloon", "Saloon"));
-
+	
 	std::vector<std::shared_ptr<IGoal>> goals;
 	std::shared_ptr<GoToGoal> goal = std::make_shared<GoToGoal>(navigationPlanner);
 	goals.push_back(goal);
 
-	auto agent = std::make_shared<BaseAgent>(goapPlanner, goals, predicates);
+	auto agent = std::make_shared<NiceMock<AgentMock>>(goapPlanner, goals, predicates);
 
 	//TODO this create can be of BaseGoal and implemented into the GoToGoal as DoCreate
 	//then, we need a mechanism to call the DoCreate from BaseGoal and cannot be on a constructor
 	//because of shared of this. Perhaps the agent can call create all goals.
+	
 	goal->Create(agent);	
-
+	
 	agent->Update(0.0f); //validate goal can be executed
 	agent->Update(0.0f); //Starts executing first action
+	agent->Update(0.0f); //Changing to the next action
+	agent->Update(0.0f); //Starts executing second action
 
-	ASSERT_TRUE(agent->HasPredicate(PREDICATE_AT_PLACE->GetID()));
+	ASSERT_TRUE(agent->HasPredicate(Predicates::PREDICATE_AT_PLACE->GetID()));
 }
 
 TEST(NAI_GoToGoalTest, When_AgentHasTwoPlacesToGo_Then_ArrivesAtPlaceWithLessCost)
