@@ -125,7 +125,7 @@ TEST(NAI_GoToGoalTest, When_AgentHasToGo_Then_Arrives)
 
 	std::string destinationPlaceName("Saloon");
 	std::vector<std::shared_ptr<IPredicate>> predicates;
-	predicates.push_back(std::make_shared<GoToPredicate>("GoToSaloon", destinationPlaceName));
+	predicates.push_back(std::make_shared<GoToPredicate>("GoTo", destinationPlaceName));
 	
 	std::vector<std::shared_ptr<IGoal>> goals;
 	std::shared_ptr<GoToGoal> goal = std::make_shared<GoToGoal>(navigationPlanner);
