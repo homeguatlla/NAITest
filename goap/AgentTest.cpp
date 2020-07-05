@@ -23,6 +23,7 @@ public:
 	virtual ~AgentMock() = default;
 
 	glm::vec3 GetPosition() const override { return position; }
+	void MoveTo(float elapsedTime, const glm::vec3& point) override {}
 
 private:
 	glm::vec3 position;
