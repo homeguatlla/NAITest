@@ -189,6 +189,10 @@ TEST(NAI_GoToGoalTest, When_AgentHasToGoAndNewPredicate_Then_Abort)
 	ASSERT_TRUE(agent->GetCurrentState() == AgentState::STATE_PLANNING);
 }
 
+TEST(NAI_GoToGoalTest, When_AgentHasToGoAndNewPredicate_Then_AbortAndRestartsTheSameGoal)
+{
+}
+
 TEST(NAI_GoToGoalTest, When_AgentHasTwoPlacesToGo_Then_ArrivesAtPlaceWithLessCost)
 {
 }
