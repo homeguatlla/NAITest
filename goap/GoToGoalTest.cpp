@@ -153,6 +153,38 @@ TEST(NAI_GoToGoalTest, When_AgentHasToGo_Then_Arrives)
 
 TEST(NAI_GoToGoalTest, When_AgentHasToGoAndNewPredicate_Then_Abort)
 {
+	auto goapPlanner = std::make_shared<NiceMock<GoapPlanner>>();
+	auto navigationPlanner = std::make_shared<NiceMock<NavigationPlannerMock>>();
+
+	std::string destinationPlaceName("Saloon");
+	std::vector<std::shared_ptr<IPredicate>> predicates;
+	predicates.push_back(std::make_shared<GoToPredicate>("GoTo", destinationPlaceName));
+
+	std::vector<std::shared_ptr<IGoal>> goals;
+	std::shared_ptr<GoToGoal> goal = std::make_shared<GoToGoal>(navigationPlanner);
+	goals.push_back(goal);
+
+	glm::vec3 originPoint(0.0f);
+	float speed = 10.f;
+
+	auto agent = std::make_shared<NiceMock<AgentWalkerMock>>(originPoint, speed, goapPlanner, goals, predicates);
+
+	//TODO this create can be of BaseGoal and implemented into the GoToGoal as DoCreate
+	//then, we need a mechanism to call the DoCreate from BaseGoal and cannot be on a constructor
+	//because of shared of this. Perhaps the agent can call create all goals.
+
+	goal->Create(agent);
+
+	for (auto i = 0; i < 73; ++i)
+	{
+		agent->Update(0.016f);	
+	}
+
+	agent->OnNewPredicate(std::make_shared<BasePredicate>("NewPredicate"));
+	agent->Update(0.016f);
+
+	ASSERT_FALSE(agent->HasPredicate(Predicates::PREDICATE_AT_PLACE->GetID()));
+	ASSERT_TRUE(agent->GetCurrentState() == AgentState::STATE_PLANNING);
 }
 
 TEST(NAI_GoToGoalTest, When_AgentHasTwoPlacesToGo_Then_ArrivesAtPlaceWithLessCost)
