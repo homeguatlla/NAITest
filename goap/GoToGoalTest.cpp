@@ -179,10 +179,12 @@ TEST(NAI_GoToGoalTest, When_AgentHasToGoAndNewPredicate_Then_Abort)
 	{
 		agent->Update(0.016f);	
 	}
+	ASSERT_TRUE(agent->GetPosition() == glm::vec3(4.96755219f, 0.0f, 5.95964909f));
 
 	agent->OnNewPredicate(std::make_shared<BasePredicate>("NewPredicate"));
 	agent->Update(0.016f);
 
+	ASSERT_TRUE(agent->GetPosition() == glm::vec3(4.96755219f, 0.0f, 5.95964909f));
 	ASSERT_FALSE(agent->HasPredicate(Predicates::PREDICATE_AT_PLACE->GetID()));
 	ASSERT_TRUE(agent->GetCurrentState() == AgentState::STATE_PLANNING);
 }
