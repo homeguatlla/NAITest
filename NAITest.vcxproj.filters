@@ -4,9 +4,6 @@
     <ClCompile Include="goap\ActionTest.cpp">
       <Filter>goap</Filter>
     </ClCompile>
-    <ClCompile Include="goap\PlannerTest.cpp">
-      <Filter>goap</Filter>
-    </ClCompile>
     <ClCompile Include="goap\AgentTest.cpp">
       <Filter>goap</Filter>
     </ClCompile>
@@ -15,6 +12,12 @@
     <ClCompile Include="pchTest.cpp" />
     <ClCompile Include="..\NGenius\packages\gmock.1.10.0\lib\native\src\gtest\src\gtest_main.cc" />
     <ClCompile Include="goap\GoToGoalTest.cpp">
+      <Filter>goap</Filter>
+    </ClCompile>
+    <ClCompile Include="goap\DirectPlannerTest.cpp">
+      <Filter>goap</Filter>
+    </ClCompile>
+    <ClCompile Include="goap\TreePlannerTest.cpp">
       <Filter>goap</Filter>
     </ClCompile>
   </ItemGroup>

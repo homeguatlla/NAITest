@@ -3,7 +3,7 @@
 #include "source/goap/IAction.h"
 #include "source/goap/goals/GoToGoal.h"
 #include "source/goap/BasePredicate.h"
-#include "source/goap/GoapPlanner.h"
+#include "source/goap/planners/DirectGoapPlanner.h"
 #include "source/goap/agent/BaseAgent.h"
 #include "source/goap/predicates/GoapPredicates.h"
 #include "source/navigation/INavigationPlanner.h"
@@ -19,9 +19,9 @@ using ::testing::NiceMock;
 class AgentWalkerMock : public BaseAgent
 {
 public:
-	AgentWalkerMock(const glm::vec3& position, float speed, std::shared_ptr<IGoapPlanner> goapPlanner,
+	AgentWalkerMock(const glm::vec3& position, float speed, std::shared_ptr<IGoapPlanner> DirectGoapPlanner,
 		std::vector<std::shared_ptr<IGoal>>& goals,
-		std::vector<std::shared_ptr<IPredicate>>& predicates) : BaseAgent(goapPlanner, goals, predicates),
+		std::vector<std::shared_ptr<IPredicate>>& predicates) : BaseAgent(DirectGoapPlanner, goals, predicates),
 		mPosition { position },
 		mSpeed { speed }
 	{
@@ -117,10 +117,19 @@ public:
 	MOCK_CONST_METHOD3(GetPathFromTo, void(const glm::vec3&, const glm::vec3&, std::function<void(std::shared_ptr<INavigationPath>)>));
 };
 
+class GoToGoalMock : public GoToGoal
+{
+public:
+	GoToGoalMock(std::shared_ptr<INavigationPlanner> planner) : GoToGoal(planner)
+	{
+	}
+	MOCK_METHOD0(DoCancel, void());
+};
+
 
 TEST(NAI_GoToGoalTest, When_AgentHasToGo_Then_Arrives)
 {
-	auto goapPlanner = std::make_shared<NiceMock<GoapPlanner>>();
+	auto goapPlanner = std::make_shared<NiceMock<DirectGoapPlanner>>();
 	auto navigationPlanner = std::make_shared<NiceMock<NavigationPlannerMock>>();
 
 	std::string destinationPlaceName("Saloon");
@@ -128,7 +137,7 @@ TEST(NAI_GoToGoalTest, When_AgentHasToGo_Then_Arrives)
 	predicates.push_back(std::make_shared<GoToPredicate>("GoTo", destinationPlaceName));
 	
 	std::vector<std::shared_ptr<IGoal>> goals;
-	std::shared_ptr<GoToGoal> goal = std::make_shared<GoToGoal>(navigationPlanner);
+	auto goal = std::make_shared<NiceMock<GoToGoalMock>>(navigationPlanner);
 	goals.push_back(goal);
 
 	glm::vec3 originPoint(0.0f);
@@ -153,7 +162,7 @@ TEST(NAI_GoToGoalTest, When_AgentHasToGo_Then_Arrives)
 
 TEST(NAI_GoToGoalTest, When_AgentHasToGoAndNewPredicate_Then_Abort)
 {
-	auto goapPlanner = std::make_shared<NiceMock<GoapPlanner>>();
+	auto goapPlanner = std::make_shared<NiceMock<DirectGoapPlanner>>();
 	auto navigationPlanner = std::make_shared<NiceMock<NavigationPlannerMock>>();
 
 	std::string destinationPlaceName("Saloon");
@@ -161,17 +170,13 @@ TEST(NAI_GoToGoalTest, When_AgentHasToGoAndNewPredicate_Then_Abort)
 	predicates.push_back(std::make_shared<GoToPredicate>("GoTo", destinationPlaceName));
 
 	std::vector<std::shared_ptr<IGoal>> goals;
-	std::shared_ptr<GoToGoal> goal = std::make_shared<GoToGoal>(navigationPlanner);
+	auto goal = std::make_shared<NiceMock<GoToGoalMock>>(navigationPlanner);	
 	goals.push_back(goal);
 
 	glm::vec3 originPoint(0.0f);
 	float speed = 10.f;
 
 	auto agent = std::make_shared<NiceMock<AgentWalkerMock>>(originPoint, speed, goapPlanner, goals, predicates);
-
-	//TODO this create can be of BaseGoal and implemented into the GoToGoal as DoCreate
-	//then, we need a mechanism to call the DoCreate from BaseGoal and cannot be on a constructor
-	//because of shared of this. Perhaps the agent can call create all goals.
 
 	goal->Create(agent);
 
@@ -180,6 +185,7 @@ TEST(NAI_GoToGoalTest, When_AgentHasToGoAndNewPredicate_Then_Abort)
 		agent->Update(0.016f);	
 	}
 	ASSERT_TRUE(agent->GetPosition() == glm::vec3(4.96755219f, 0.0f, 5.95964909f));
+	EXPECT_CALL(*goal, DoCancel).Times(1);
 
 	agent->OnNewPredicate(std::make_shared<BasePredicate>("NewPredicate"));
 	agent->Update(0.016f);
@@ -191,9 +197,67 @@ TEST(NAI_GoToGoalTest, When_AgentHasToGoAndNewPredicate_Then_Abort)
 
 TEST(NAI_GoToGoalTest, When_AgentHasToGoAndNewPredicate_Then_AbortAndRestartsTheSameGoal)
 {
+	auto goapPlanner = std::make_shared<NiceMock<DirectGoapPlanner>>();
+	auto navigationPlanner = std::make_shared<NiceMock<NavigationPlannerMock>>();
+
+	std::string destinationPlaceName("Saloon");
+	std::vector<std::shared_ptr<IPredicate>> predicates;
+	predicates.push_back(std::make_shared<GoToPredicate>("GoTo", destinationPlaceName));
+
+	std::vector<std::shared_ptr<IGoal>> goals;
+	auto goal = std::make_shared<NiceMock<GoToGoalMock>>(navigationPlanner);
+	goals.push_back(goal);
+
+	glm::vec3 originPoint(0.0f);
+	float speed = 10.f;
+
+	auto agent = std::make_shared<NiceMock<AgentWalkerMock>>(originPoint, speed, goapPlanner, goals, predicates);
+
+	goal->Create(agent);
+
+	for (auto i = 0; i < 73; ++i)
+	{
+		agent->Update(0.016f);
+	}
+	ASSERT_TRUE(agent->GetPosition() == glm::vec3(4.96755219f, 0.0f, 5.95964909f));
+	EXPECT_CALL(*goal, DoCancel).Times(1);
+
+	agent->OnNewPredicate(std::make_shared<BasePredicate>("NewPredicate"));
+	
+	for (auto i = 0; i < 69; ++i)
+	{
+		agent->Update(0.016f);
+	}
+
+	ASSERT_TRUE(glm::distance(agent->GetPosition(), navigationPlanner->GetLocationGivenAName(destinationPlaceName)) < 0.1f);
+	ASSERT_TRUE(agent->HasPredicate(Predicates::PREDICATE_AT_PLACE->GetID()));
+	ASSERT_TRUE(agent->GetCurrentState() == AgentState::STATE_PLANNING);
 }
 
 TEST(NAI_GoToGoalTest, When_AgentHasTwoPlacesToGo_Then_ArrivesAtPlaceWithLessCost)
 {
+	auto goapPlanner = std::make_shared<NiceMock<DirectGoapPlanner>>();
+	auto navigationPlanner = std::make_shared<NiceMock<NavigationPlannerMock>>();
+
+	std::string destinationPlaceSaloonName("Saloon");
+	std::string destinationPlaceGeneralStoreName("GeneralStore");
+	std::vector<std::shared_ptr<IPredicate>> predicates;
+	predicates.push_back(std::make_shared<GoToPredicate>("GoTo", destinationPlaceSaloonName));
+	predicates.push_back(std::make_shared<GoToPredicate>("GoTo", destinationPlaceGeneralStoreName));
+
+	std::vector<std::shared_ptr<IGoal>> goals;
+	auto goal = std::make_shared<NiceMock<GoToGoalMock>>(navigationPlanner);
+	goals.push_back(goal);
+
+	glm::vec3 originPoint(0.0f);
+	float speed = 10.f;
+
+	auto agent = std::make_shared<NiceMock<AgentWalkerMock>>(originPoint, speed, goapPlanner, goals, predicates);
+
+	goal->Create(agent);
+
+	agent->Update(0.016f);
+
+	ASSERT_TRUE(false);
 }
 
