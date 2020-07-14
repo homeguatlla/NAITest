@@ -61,7 +61,10 @@ public:
 				std::vector<std::shared_ptr<IAction>> actions;
 				actions.push_back(std::make_shared<BaseAction>(preconditions, postconditions));
 
-				return std::make_shared<BaseGoal>(actions);
+				std::vector<std::shared_ptr<IGoal>> result;
+				result.push_back(std::make_shared<BaseGoal>(actions));
+
+				return result;
 			});
 	}
 	virtual ~OneActionGoapPlannerMock() = default;
@@ -71,7 +74,7 @@ public:
 			std::vector<std::shared_ptr<IGoal>>&, 
 			std::vector<std::shared_ptr<IPredicate>>&));
 	MOCK_CONST_METHOD3(GetPlanToReach,
-		std::shared_ptr<IGoal>(
+		std::vector<std::shared_ptr<IGoal>>(
 			std::vector<std::shared_ptr<IGoal>>&,
 			std::vector<std::shared_ptr<IPredicate>>&,
 			std::vector<std::shared_ptr<IPredicate>>&));
@@ -114,7 +117,10 @@ public:
 				std::vector<std::shared_ptr<IAction>> actions;
 				actions.push_back(std::make_shared<BaseAction>(preconditions, postconditions));
 
-				return std::make_shared<BaseGoal>(actions);
+				std::vector<std::shared_ptr<IGoal>> result;
+				result.push_back(std::make_shared<BaseGoal>(actions));
+
+				return result;
 			});
 	}
 	virtual ~TwoActionGoapPlannerMock() = default;
@@ -123,7 +129,7 @@ public:
 			std::vector<std::shared_ptr<IGoal>>&,
 			std::vector<std::shared_ptr<IPredicate>>&));
 	MOCK_CONST_METHOD3(GetPlanToReach,
-		std::shared_ptr<IGoal>(
+		std::vector<std::shared_ptr<IGoal>>(
 			std::vector<std::shared_ptr<IGoal>>&,
 			std::vector<std::shared_ptr<IPredicate>>&,
 			std::vector<std::shared_ptr<IPredicate>>&));
@@ -148,7 +154,7 @@ public:
 				std::vector<std::shared_ptr<IPredicate>>& predicates,
 				std::vector<std::shared_ptr<IPredicate>>& desiredPredicates)
 			{
-				return nullptr;
+				return std::vector<std::shared_ptr<IGoal>>();
 			});
 	}
 	virtual ~EmptyGoapPlannerMock() = default;
@@ -158,7 +164,7 @@ public:
 			std::vector<std::shared_ptr<IGoal>>&,
 			std::vector<std::shared_ptr<IPredicate>>&));
 	MOCK_CONST_METHOD3(GetPlanToReach,
-		std::shared_ptr<IGoal>(
+		std::vector<std::shared_ptr<IGoal>>(
 			std::vector<std::shared_ptr<IGoal>>&,
 			std::vector<std::shared_ptr<IPredicate>>&,
 			std::vector<std::shared_ptr<IPredicate>>&));

@@ -4,6 +4,7 @@
 #include "source/goap/goals/GoToGoal.h"
 #include "source/goap/BasePredicate.h"
 #include "source/goap/planners/DirectGoapPlanner.h"
+#include "source/goap/planners/TreeGoapPlanner.h"
 #include "source/goap/agent/BaseAgent.h"
 #include "source/goap/predicates/GoapPredicates.h"
 #include "source/navigation/INavigationPlanner.h"
@@ -110,11 +111,26 @@ public:
 
 				callback(std::make_shared<NiceMock<NavigationPathMock>>(path));
 			});
+			
+		ON_CALL(*this, GetAproxCost).WillByDefault(
+			[this](const glm::vec3& origin, const glm::vec3& destination)
+			{
+			//TODO depending on the destination we need to distinguish between saloon and generalstore
+				if (destination == glm::vec3(0.0f))
+				{
+					return 3;
+				}
+				else
+				{
+					return 5;
+				}
+			});
 	}
 	virtual ~NavigationPlannerMock() = default;
 
 	MOCK_CONST_METHOD1(GetLocationGivenAName, glm::vec3(const std::string&));
 	MOCK_CONST_METHOD3(GetPathFromTo, void(const glm::vec3&, const glm::vec3&, std::function<void(std::shared_ptr<INavigationPath>)>));
+	MOCK_CONST_METHOD2(GetAproxCost, unsigned int(const glm::vec3& origin, const glm::vec3& destination));
 };
 
 class GoToGoalMock : public GoToGoal
@@ -236,7 +252,7 @@ TEST(NAI_GoToGoalTest, When_AgentHasToGoAndNewPredicate_Then_AbortAndRestartsThe
 
 TEST(NAI_GoToGoalTest, When_AgentHasTwoPlacesToGo_Then_ArrivesAtPlaceWithLessCost)
 {
-	auto goapPlanner = std::make_shared<NiceMock<DirectGoapPlanner>>();
+	auto goapPlanner = std::make_shared<NiceMock<TreeGoapPlanner>>();
 	auto navigationPlanner = std::make_shared<NiceMock<NavigationPlannerMock>>();
 
 	std::string destinationPlaceSaloonName("Saloon");
