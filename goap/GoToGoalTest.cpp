@@ -95,7 +95,7 @@ public:
 				}
 				else
 				{
-					return glm::vec3(0.0f);
+					return glm::vec3(7, 1, 10);
 				}
 			});
 
@@ -115,8 +115,7 @@ public:
 		ON_CALL(*this, GetAproxCost).WillByDefault(
 			[this](const glm::vec3& origin, const glm::vec3& destination)
 			{
-			//TODO depending on the destination we need to distinguish between saloon and generalstore
-				if (destination == glm::vec3(0.0f))
+				if (destination == glm::vec3(7, 1, 10))
 				{
 					return 3;
 				}
@@ -272,8 +271,13 @@ TEST(NAI_GoToGoalTest, When_AgentHasTwoPlacesToGo_Then_ArrivesAtPlaceWithLessCos
 
 	goal->Create(agent);
 
-	agent->Update(0.016f);
+	for (auto i = 0; i < 115; ++i)
+	{
+		agent->Update(0.016f);
+	}
 
-	ASSERT_TRUE(false);
+	std::string destinationPlaceName("GeneralStore");
+	ASSERT_TRUE(glm::distance(agent->GetPosition(), navigationPlanner->GetLocationGivenAName(destinationPlaceName)) < 0.1f);
+	ASSERT_TRUE(agent->HasPredicate(Predicates::PREDICATE_AT_PLACE->GetID()));
 }
 
