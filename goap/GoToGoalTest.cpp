@@ -160,11 +160,7 @@ TEST(NAI_GoToGoalTest, When_AgentHasToGo_Then_Arrives)
 
 	auto agent = std::make_shared<NiceMock<AgentWalkerMock>>(originPoint, speed, goapPlanner, goals, predicates);
 
-	//TODO this create can be of BaseGoal and implemented into the GoToGoal as DoCreate
-	//then, we need a mechanism to call the DoCreate from BaseGoal and cannot be on a constructor
-	//because of shared of this. Perhaps the agent can call create all goals.
-	
-	goal->Create(agent);	
+	agent->StartUp();
 	
 	for(auto i = 0; i < 132; ++i)
 	{
@@ -193,7 +189,7 @@ TEST(NAI_GoToGoalTest, When_AgentHasToGoAndNewPredicate_Then_Abort)
 
 	auto agent = std::make_shared<NiceMock<AgentWalkerMock>>(originPoint, speed, goapPlanner, goals, predicates);
 
-	goal->Create(agent);
+	agent->StartUp();
 
 	for (auto i = 0; i < 73; ++i)
 	{
@@ -228,7 +224,7 @@ TEST(NAI_GoToGoalTest, When_AgentHasToGoAndNewPredicate_Then_AbortAndRestartsThe
 
 	auto agent = std::make_shared<NiceMock<AgentWalkerMock>>(originPoint, speed, goapPlanner, goals, predicates);
 
-	goal->Create(agent);
+	agent->StartUp();
 
 	for (auto i = 0; i < 73; ++i)
 	{
@@ -269,7 +265,7 @@ TEST(NAI_GoToGoalTest, When_AgentHasTwoPlacesToGo_Then_ArrivesAtPlaceWithLessCos
 
 	auto agent = std::make_shared<NiceMock<AgentWalkerMock>>(originPoint, speed, goapPlanner, goals, predicates);
 
-	goal->Create(agent);
+	agent->StartUp();
 
 	for (auto i = 0; i < 115; ++i)
 	{
@@ -299,7 +295,7 @@ TEST(NAI_GoToGoalTest, When_AgentArrivedAtPlace_GoToPlanningAndNoPlan)
 
 	auto agent = std::make_shared<NiceMock<AgentWalkerMock>>(originPoint, speed, goapPlanner, goals, predicates);
 
-	goal->Create(agent);
+	agent->StartUp();
 
 	for (auto i = 0; i < 115; ++i)
 	{
