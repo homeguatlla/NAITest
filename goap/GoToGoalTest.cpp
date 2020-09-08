@@ -128,7 +128,7 @@ public:
 	virtual ~NavigationPlannerMock() = default;
 
 	MOCK_CONST_METHOD1(GetLocationGivenAName, glm::vec3(const std::string&));
-	MOCK_CONST_METHOD3(GetPathFromTo, void(const glm::vec3&, const glm::vec3&, std::function<void(std::shared_ptr<INavigationPath>)>));
+	MOCK_METHOD3(GetPathFromTo, void(const glm::vec3&, const glm::vec3&, PathFromToCallback));
 	MOCK_CONST_METHOD2(GetAproxCost, unsigned int(const glm::vec3& origin, const glm::vec3& destination));
 };
 
