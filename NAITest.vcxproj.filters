@@ -20,6 +20,9 @@
     <ClCompile Include="goap\TreePlannerTest.cpp">
       <Filter>goap</Filter>
     </ClCompile>
+    <ClCompile Include="goap\PredicatesHandlerTest.cpp">
+      <Filter>goap</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
