@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
-#include "source/goap/PredicatesHandler.h"
-#include "source/goap/BasePredicate.h"
+#include "goap/PredicatesHandler.h"
+#include "goap/BasePredicate.h"
 
 #include <memory>
 #include <vector>

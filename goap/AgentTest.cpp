@@ -1,11 +1,11 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
-#include "source/goap/agent/IAgent.h"
-#include "source/goap/agent/BaseAgent.h"
-#include "source/goap/BaseGoal.h"
-#include "source/goap/BasePredicate.h"
-#include "source/goap/BaseAction.h"
-#include "source/goap/IGoapPlanner.h"
+#include "goap/agent/IAgent.h"
+#include "goap/agent/BaseAgent.h"
+#include "goap/BaseGoal.h"
+#include "goap/BasePredicate.h"
+#include "goap/BaseAction.h"
+#include "goap/IGoapPlanner.h"
 
 
 using namespace NAI::Goap;

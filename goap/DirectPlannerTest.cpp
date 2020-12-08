@@ -1,11 +1,11 @@
 #include "gtest/gtest.h"
-#include "source/goap/planners/DirectGoapPlanner.h"
-#include "source/goap/IGoal.h"
-#include "source/goap/BaseGoal.h"
-#include "source/goap/IAction.h"
-#include "source/goap/BaseAction.h"
-#include "source/goap/IPredicate.h"
-#include "source/goap/BasePredicate.h"
+#include "goap/planners/DirectGoapPlanner.h"
+#include "goap/IGoal.h"
+#include "goap/BaseGoal.h"
+#include "goap/IAction.h"
+#include "goap/BaseAction.h"
+#include "goap/IPredicate.h"
+#include "goap/BasePredicate.h"
 
 using namespace NAI::Goap;
 

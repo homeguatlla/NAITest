@@ -1,14 +1,14 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
-#include "source/goap/IAction.h"
-#include "source/goap/goals/GoToGoal.h"
-#include "source/goap/BasePredicate.h"
-#include "source/goap/planners/DirectGoapPlanner.h"
-#include "source/goap/planners/TreeGoapPlanner.h"
-#include "source/goap/agent/BaseAgent.h"
-#include "source/goap/predicates/GoapPredicates.h"
-#include "source/navigation/INavigationPlanner.h"
-#include "source/navigation/INavigationPath.h"
+#include "goap/IAction.h"
+#include "goap/goals/GoToGoal.h"
+#include "goap/BasePredicate.h"
+#include "goap/planners/DirectGoapPlanner.h"
+#include "goap/planners/TreeGoapPlanner.h"
+#include "goap/agent/BaseAgent.h"
+#include "goap/predicates/GoapPredicates.h"
+#include "navigation/INavigationPlanner.h"
+#include "navigation/INavigationPath.h"
 
 #include <memory>
 
