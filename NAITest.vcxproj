@@ -42,6 +42,7 @@
     <ClCompile Include="goap\DirectPlannerTest.cpp" />
     <ClCompile Include="goap\GoToGoalTest.cpp" />
     <ClCompile Include="goap\PredicatesHandlerTest.cpp" />
+    <ClCompile Include="goap\SensorySystemTest.cpp" />
     <ClCompile Include="goap\TreePlannerTest.cpp" />
     <ClCompile Include="pchTest.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

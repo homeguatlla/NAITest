@@ -16,6 +16,7 @@ using namespace NAI::Goap;
 using namespace NAI::Navigation;
 using ::testing::NiceMock;
 
+static const float MOVEMENT_PRECISION = 0.01f;
 
 class AgentWalkerMock : public BaseAgent
 {
