@@ -1,9 +1,9 @@
 //#include "pchTest.h"
 #include "gtest/gtest.h"
-#include "source/goap/IAction.h"
-#include "source/goap/BaseAction.h"
-#include "source/goap/IPredicate.h"
-#include "source/goap/BasePredicate.h"
+#include "goap/IAction.h"
+#include "goap/BaseAction.h"
+#include "goap/IPredicate.h"
+#include "goap/BasePredicate.h"
 
 #include <memory>
 #include <vector>

@@ -26,6 +26,12 @@
     <ClCompile Include="goap\SensorySystemTest.cpp">
       <Filter>goap</Filter>
     </ClCompile>
+    <ClCompile Include="goap\MemoryTest.cpp">
+      <Filter>goap</Filter>
+    </ClCompile>
+    <ClCompile Include="goap\PerceptionSystemTest.cpp">
+      <Filter>goap</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

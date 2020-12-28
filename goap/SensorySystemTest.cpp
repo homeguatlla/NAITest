@@ -149,8 +149,7 @@ TEST(NAI_SensorySystem, When_Created_Then_TheListOfStimulusIsEmpty)
 {
 	const SensorySystem sensorySystem;
 
-	const auto sensoryElements = sensorySystem.GetPerceivedStimulus();
-	ASSERT_TRUE(sensoryElements.empty());
+	ASSERT_TRUE(sensorySystem.IsMemoryEmpty());
 }
 
 TEST(NAI_SensorySystem, When_SuscribedToASensor_And_NewStimulus_Then_TheStimulusIsReceived)
@@ -184,8 +183,7 @@ TEST(NAI_SensorySystem, When_Update_And_StimulusIntoTheThreshold_Then_TheListOfS
 	sensorThresholdsMap[typeid(NiceMock<HearingStimulusMock>).name()] = threshold;
 	sensorySystem->Update(0.16f, sensorThresholdsMap);
 	
-	const auto sensoryElements = sensorySystem->GetPerceivedStimulus();
-	ASSERT_FALSE(sensoryElements.empty());
+	ASSERT_FALSE(sensorySystem->IsMemoryEmpty());
 }
 
 TEST(NAI_SensorySystem, When_Update_And_StimulusOutsideTheThreshold_Then_TheListOfStimulusIsEmpty)
@@ -204,8 +202,7 @@ TEST(NAI_SensorySystem, When_Update_And_StimulusOutsideTheThreshold_Then_TheList
 	sensorThresholdsMap[typeid(NiceMock<HearingStimulusMock>).name()] = threshold;
 	sensorySystem->Update(0.16f, sensorThresholdsMap);
 
-	const auto sensoryElements = sensorySystem->GetPerceivedStimulus();
-	ASSERT_TRUE(sensoryElements.empty());
+	ASSERT_TRUE(sensorySystem->IsMemoryEmpty());
 }
 TEST(NAI_SensorySystem, When_Update_And_StimulusOfSensorA_And_StimulusOfSensorB_And_OnlyAInsideTheThreshold_Then_TheListOfStimulusIsTheA)
 {
@@ -236,6 +233,5 @@ TEST(NAI_SensorySystem, When_Update_And_StimulusOfSensorA_And_StimulusOfSensorB_
 	
 	sensorySystem->Update(0.16f, sensorThresholdsMap);
 
-	const auto sensoryElements = sensorySystem->GetPerceivedStimulus();
-	ASSERT_FALSE(sensoryElements.empty());
+	ASSERT_FALSE(sensorySystem->IsMemoryEmpty());
 }
