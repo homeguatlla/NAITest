@@ -6,7 +6,7 @@
 #include "goap/BasePredicate.h"
 #include "goap/BaseAction.h"
 #include "goap/IGoapPlanner.h"
-
+#include <goap/sensory/IStimulus.h>
 
 using namespace NAI::Goap;
 using ::testing::NiceMock;
@@ -170,6 +170,24 @@ public:
 			std::vector<std::shared_ptr<IPredicate>>&));
 };
 
+class HearingStimulusMock : public IStimulus
+{
+public:
+	HearingStimulusMock()
+	{
+		ON_CALL(*this, GetClassName).WillByDefault(
+			[this]()
+			{
+				return typeid(*this).name();
+			});
+	}
+
+	virtual ~HearingStimulusMock() = default;
+
+	MOCK_CONST_METHOD0(GetClassName, std::string());
+	MOCK_CONST_METHOD0(GetPosition, glm::vec3());
+};
+
 TEST(NAI_Agent, When_Start_Then_AgentIsPlanning) 
 {
 	auto goapPlannerMock = std::make_shared<NiceMock<EmptyGoapPlannerMock>>();
@@ -272,4 +290,30 @@ TEST(NAI_Agent, When_ProcessingAPlanAndNewPredicatesAddedIntoThePredicates_Then_
 
 	ASSERT_TRUE(agent->HasPredicate(goapPlannerMock->predicateC->GetID()));
 	ASSERT_TRUE(agent->GetCurrentState() == AgentState::STATE_PLANNING);
+}
+
+TEST(NAI_Agent, When_EvaluatingAnStimulusRelatedToAGoal_Then_NewPredicate)
+{
+	auto goapPlannerMock = std::make_shared<NiceMock<OneActionGoapPlannerMock>>();
+	std::vector<std::shared_ptr<IPredicate>> predicates;
+	std::vector<std::shared_ptr<IGoal>> goals;
+	std::shared_ptr<IAgent> agent = std::make_shared<NiceMock<AgentMock>>(goapPlannerMock, goals, predicates);
+
+	auto stimulus = std::make_shared<HearingStimulusMock>();
+	auto newPredicatesList = agent->Evaluate(stimulus);
+	
+	ASSERT_FALSE(newPredicatesList.empty());
+}
+
+TEST(NAI_Agent, When_EvaluatingAnStimulusUnRelatedToAGoal_Then_Null)
+{
+	auto goapPlannerMock = std::make_shared<NiceMock<OneActionGoapPlannerMock>>();
+	std::vector<std::shared_ptr<IPredicate>> predicates;
+	std::vector<std::shared_ptr<IGoal>> goals;
+	std::shared_ptr<IAgent> agent = std::make_shared<NiceMock<AgentMock>>(goapPlannerMock, goals, predicates);
+
+	auto stimulus = std::make_shared<HearingStimulusMock>();
+	auto newPredicatesList = agent->Evaluate(stimulus);
+
+	ASSERT_TRUE(newPredicatesList.empty());
 }

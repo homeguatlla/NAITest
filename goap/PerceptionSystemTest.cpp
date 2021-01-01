@@ -11,5 +11,12 @@ TEST(NAI_PerceptionSystem, When_Created_Then_TheListOfPredicatesIsEmpty)
 {
 	const PerceptionSystem perceptionSystem;
 
-	//ASSERT_TRUE(sensorySystem.IsMemoryEmpty());
+	ASSERT_TRUE(false);
+}
+
+TEST(NAI_PerceptionSystem, When_Update_Then_NewPredicatesAreNotifiedToAgent)
+{
+	const PerceptionSystem perceptionSystem;
+	
+	ASSERT_TRUE(false);
 }

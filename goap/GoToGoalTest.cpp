@@ -347,3 +347,13 @@ TEST(NAI_GoToGoalTest, When_AgentArrivedAtPlace_GoToPlanningAndNoPlan)
 
 	ASSERT_TRUE(agent->GetCurrentState() == AgentState::STATE_PLANNING);
 }
+
+TEST(NAI_GoToGoalTest, When_Evaluate_Then_NewPredicate)
+{
+	ASSERT_TRUE(false);
+}
+
+TEST(NAI_GoToGoalTest, When_Evaluate_Then_Null)
+{
+	ASSERT_TRUE(false);
+}
