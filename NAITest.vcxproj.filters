@@ -32,6 +32,9 @@
     <ClCompile Include="goap\PerceptionSystemTest.cpp">
       <Filter>goap</Filter>
     </ClCompile>
+    <ClCompile Include="utils\subscriber\PublisherSubscriberTest.cpp">
+      <Filter>utils\subscriber</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -39,6 +42,12 @@
   <ItemGroup>
     <Filter Include="goap">
       <UniqueIdentifier>{593522ff-5a2f-4f35-af5c-632d8ef0a2a7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utils">
+      <UniqueIdentifier>{57955364-9432-4a3d-9681-ab0ce3d27550}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utils\subscriber">
+      <UniqueIdentifier>{c4c43b0c-890f-41d1-9a02-a7af727b3dcd}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

@@ -7,7 +7,7 @@
 using namespace NAI::Goap;
 using namespace testing;
 
-TEST(NAI_PerceptionSystem, When_Created_Then_) 
+TEST(NAI_PerceptionSystem, When_Created_Then_TheListOfPredicatesIsEmpty) 
 {
 	const PerceptionSystem perceptionSystem;
 
