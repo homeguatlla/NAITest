@@ -6,9 +6,11 @@
 #include "goap/sensory/IStimulus.h"
 #include "goap/sensory/IThreshold.h"
 #include "goap/sensory/SensorySystem.h"
+#include "goap/sensory/BaseSensor.h"
 
 using namespace NAI::Goap;
 using namespace testing;
+using namespace core::utils::subscriber;
 
 
 class HearingStimulusMock : public IStimulus
@@ -47,15 +49,16 @@ public:
 	MOCK_CONST_METHOD0(GetPosition, glm::vec3());
 };
 
-class HearingSensorMock : public ISensor
+class HearingSensorMock
 {
 public:
 	HearingSensorMock()
 	{
 		ON_CALL(*this, Subscribe).WillByDefault(
-			[this](const std::shared_ptr<ISensorSubscriber> subscriber)
+			[this](std::shared_ptr<ISubscriber<IStimulus>> subscriber)
 			{
 				mSubscriber = subscriber;
+				return true;
 			});
 
 		ON_CALL(*this, Update).WillByDefault(
@@ -63,29 +66,29 @@ public:
 			{
 				if(mSubscriber)
 				{
-					mSubscriber->OnSensorNotification(std::make_shared<NiceMock<HearingStimulusMock>>());
+					mSubscriber->OnNotification(std::make_shared<NiceMock<HearingStimulusMock>>());
 				}
 			});
 	}
 
 	virtual ~HearingSensorMock() = default;
-
-	MOCK_METHOD1(Subscribe, void(const std::shared_ptr<ISensorSubscriber>));
+	MOCK_METHOD1(Subscribe, bool(std::shared_ptr<ISubscriber<IStimulus>>));
 	MOCK_METHOD1(Update, void (float));
 
 private:
-	std::shared_ptr<ISensorSubscriber> mSubscriber;
+	std::shared_ptr<ISubscriber<IStimulus>> mSubscriber;
 };
 
-class VisualSensorMock : public ISensor
+class VisualSensorMock
 {
 public:
 	VisualSensorMock()
 	{
 		ON_CALL(*this, Subscribe).WillByDefault(
-			[this](const std::shared_ptr<ISensorSubscriber> subscriber)
+			[this](std::shared_ptr<ISubscriber<IStimulus>> subscriber)
 			{
 				mSubscriber = subscriber;
+				return true;
 			});
 
 		ON_CALL(*this, Update).WillByDefault(
@@ -93,18 +96,18 @@ public:
 			{
 				if (mSubscriber)
 				{
-					mSubscriber->OnSensorNotification(std::make_shared<NiceMock<VisualStimulusMock>>());
+					mSubscriber->OnNotification(std::make_shared<NiceMock<VisualStimulusMock>>());
 				}
 			});
 	}
 
 	virtual ~VisualSensorMock() = default;
 
-	MOCK_METHOD1(Subscribe, void(const std::shared_ptr<ISensorSubscriber>));
+	MOCK_METHOD1(Subscribe, bool(std::shared_ptr<ISubscriber<IStimulus>>));
 	MOCK_METHOD1(Update, void(float));
 
 private:
-	std::shared_ptr<ISensorSubscriber> mSubscriber;
+	std::shared_ptr<ISubscriber<IStimulus>> mSubscriber;
 };
 
 class HearingThresholdMock : public IThreshold
@@ -113,7 +116,7 @@ public:
 	HearingThresholdMock(bool isPerceived) : mIsPerceived{isPerceived}
 	{
 		ON_CALL(*this, IsStimulusPerceived).WillByDefault(
-			[this](const std::shared_ptr<IStimulus>)
+			[this](const std::shared_ptr<IStimulus> stimulus)
 			{
 				return mIsPerceived;
 			});
@@ -132,7 +135,7 @@ public:
 	VisualThresholdMock(bool isPerceived) : mIsPerceived{ isPerceived }
 	{
 		ON_CALL(*this, IsStimulusPerceived).WillByDefault(
-			[this](const std::shared_ptr<IStimulus>)
+			[this](const std::shared_ptr<IStimulus> stimulus)
 			{
 				return mIsPerceived;
 			});
@@ -147,7 +150,7 @@ private:
 
 TEST(NAI_SensorySystem, When_Created_Then_TheListOfStimulusIsEmpty) 
 {
-	const SensorySystem sensorySystem;
+	const SensorySystem<IStimulus> sensorySystem;
 
 	ASSERT_TRUE(sensorySystem.IsMemoryEmpty());
 }
@@ -155,7 +158,7 @@ TEST(NAI_SensorySystem, When_Created_Then_TheListOfStimulusIsEmpty)
 TEST(NAI_SensorySystem, When_SuscribedToASensor_And_NewStimulus_Then_TheStimulusIsReceived)
 {
 	HearingSensorMock hearingSensorMock;
-	const auto sensorySystem = std::make_shared<SensorySystem>();
+	const auto sensorySystem = std::make_shared<SensorySystem<IStimulus>>();
 
 	EXPECT_CALL(hearingSensorMock, Subscribe).Times(1);
 	EXPECT_CALL(hearingSensorMock, Update).Times(1);
@@ -170,7 +173,7 @@ TEST(NAI_SensorySystem, When_SuscribedToASensor_And_NewStimulus_Then_TheStimulus
 TEST(NAI_SensorySystem, When_Update_And_StimulusIntoTheThreshold_Then_TheListOfStimulusIsNOTEmpty)
 {
 	HearingSensorMock hearingSensorMock;
-	const auto sensorySystem = std::make_shared<SensorySystem>();
+	const auto sensorySystem = std::make_shared<SensorySystem<IStimulus>>();
 
 	EXPECT_CALL(hearingSensorMock, Subscribe).Times(1);
 	EXPECT_CALL(hearingSensorMock, Update).Times(1);
@@ -189,7 +192,7 @@ TEST(NAI_SensorySystem, When_Update_And_StimulusIntoTheThreshold_Then_TheListOfS
 TEST(NAI_SensorySystem, When_Update_And_StimulusOutsideTheThreshold_Then_TheListOfStimulusIsEmpty)
 {
 	HearingSensorMock hearingSensorMock;
-	const auto sensorySystem = std::make_shared<SensorySystem>();
+	const auto sensorySystem = std::make_shared<SensorySystem<IStimulus>>();
 
 	EXPECT_CALL(hearingSensorMock, Subscribe).Times(1);
 	EXPECT_CALL(hearingSensorMock, Update).Times(1);
@@ -209,7 +212,7 @@ TEST(NAI_SensorySystem, When_Update_And_StimulusOfSensorA_And_StimulusOfSensorB_
 	HearingSensorMock hearingSensorMock;
 	VisualSensorMock visualSensorMock;
 	
-	const auto sensorySystem = std::make_shared<SensorySystem>();
+	const auto sensorySystem = std::make_shared<SensorySystem<IStimulus>>();
 
 	EXPECT_CALL(hearingSensorMock, Subscribe).Times(1);
 	EXPECT_CALL(hearingSensorMock, Update).Times(1);
