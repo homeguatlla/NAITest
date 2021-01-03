@@ -170,6 +170,28 @@ public:
 			std::vector<std::shared_ptr<IPredicate>>&));
 };
 
+class GoalAcceptanceHearingStimulusMock : public BaseGoal
+{
+public:
+	GoalAcceptanceHearingStimulusMock()
+	{
+		ON_CALL(*this, IsStimulusAccepted).WillByDefault(
+            [this](std::shared_ptr<IStimulus> stimulus)
+            {
+                return true;
+            });
+		ON_CALL(*this, TransformStimulusIntoPredicates).WillByDefault(
+            [this](std::shared_ptr<IStimulus> stimulus)
+            {
+                return std::make_shared<BasePredicate>("PredicateA");
+            });
+	}
+	virtual ~GoalAcceptanceHearingStimulusMock() = default;
+
+	MOCK_CONST_METHOD1(IsStimulusAccepted, bool(std::shared_ptr<IStimulus>));
+	MOCK_CONST_METHOD1(TransformStimulusIntoPredicates, std::shared_ptr<IPredicate>(std::shared_ptr<IStimulus>));
+};
+
 class HearingStimulusMock : public IStimulus
 {
 public:
@@ -292,28 +314,32 @@ TEST(NAI_Agent, When_ProcessingAPlanAndNewPredicatesAddedIntoThePredicates_Then_
 	ASSERT_TRUE(agent->GetCurrentState() == AgentState::STATE_PLANNING);
 }
 
-TEST(NAI_Agent, When_EvaluatingAnStimulusRelatedToAGoal_Then_NewPredicate)
+TEST(NAI_Agent, When_TransformAnStimulusToPredicatesRelatedToAGoal_Then_NewPredicate)
 {
 	auto goapPlannerMock = std::make_shared<NiceMock<OneActionGoapPlannerMock>>();
 	std::vector<std::shared_ptr<IPredicate>> predicates;
 	std::vector<std::shared_ptr<IGoal>> goals;
+
+	auto goal = std::make_shared<NiceMock<GoalAcceptanceHearingStimulusMock>>();
+	goals.push_back(goal);
 	std::shared_ptr<IAgent> agent = std::make_shared<NiceMock<AgentMock>>(goapPlannerMock, goals, predicates);
 
 	auto stimulus = std::make_shared<HearingStimulusMock>();
-	auto newPredicatesList = agent->Evaluate(stimulus);
+	
+	auto newPredicatesList = agent->TransformStimulusIntoPredicates(stimulus);
 	
 	ASSERT_FALSE(newPredicatesList.empty());
 }
 
-TEST(NAI_Agent, When_EvaluatingAnStimulusUnRelatedToAGoal_Then_Null)
+TEST(NAI_Agent, When_TransformAnStimulusToPredicatesUnRelatedToAGoal_Then_Null)
 {
 	auto goapPlannerMock = std::make_shared<NiceMock<OneActionGoapPlannerMock>>();
 	std::vector<std::shared_ptr<IPredicate>> predicates;
 	std::vector<std::shared_ptr<IGoal>> goals;
 	std::shared_ptr<IAgent> agent = std::make_shared<NiceMock<AgentMock>>(goapPlannerMock, goals, predicates);
 
-	auto stimulus = std::make_shared<HearingStimulusMock>();
-	auto newPredicatesList = agent->Evaluate(stimulus);
-
-	ASSERT_TRUE(newPredicatesList.empty());
+	const auto stimulus = std::make_shared<HearingStimulusMock>();
+	const auto isAccepted = agent->IsStimulusAccepted(stimulus);
+	
+	ASSERT_FALSE(isAccepted);
 }

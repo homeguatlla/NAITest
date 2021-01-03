@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
+
 #include "goap/IAction.h"
 #include "goap/goals/GoToGoal.h"
 #include "goap/BasePredicate.h"
@@ -7,10 +8,12 @@
 #include "goap/planners/TreeGoapPlanner.h"
 #include "goap/agent/BaseAgent.h"
 #include "goap/predicates/GoapPredicates.h"
+#include "goap/sensory/IStimulus.h"
+
 #include "navigation/INavigationPlanner.h"
 #include "navigation/INavigationPath.h"
-
 #include <memory>
+
 
 using namespace NAI::Goap;
 using namespace NAI::Navigation;
@@ -149,6 +152,24 @@ public:
 	MOCK_METHOD0(DoCancel, void());
 };
 
+class StimulusMock : public IStimulus
+{
+public:
+	StimulusMock()
+	{
+		ON_CALL(*this, GetClassName).WillByDefault(
+            [this]()
+            {
+                return StimulusMock::GetStimulusClassName(); //typeid(*this).name();
+            });
+	}
+	
+	virtual ~StimulusMock() = default;
+	static std::string GetStimulusClassName() { return typeid(StimulusMock).name(); }
+	
+	MOCK_CONST_METHOD0(GetClassName, std::string());
+	MOCK_CONST_METHOD0(GetPosition, glm::vec3());
+};
 
 TEST(NAI_GoToGoalTest, When_AgentHasToGo_Then_Arrives)
 {
@@ -347,13 +368,50 @@ TEST(NAI_GoToGoalTest, When_AgentArrivedAtPlace_GoToPlanningAndNoPlan)
 
 	ASSERT_TRUE(agent->GetCurrentState() == AgentState::STATE_PLANNING);
 }
-
-TEST(NAI_GoToGoalTest, When_Evaluate_Then_NewPredicate)
+TEST(NAI_GoToGoalTest, When_IsStimulusAcceptedButNoAddedAnyStimulusAcceptance_Then_false)
 {
-	ASSERT_TRUE(false);
+	const auto goal = std::make_shared<NiceMock<BaseGoal>>();
+	
+	const auto stimulus = std::make_shared<StimulusMock>();
+	ASSERT_FALSE(goal->IsStimulusAccepted(stimulus));
 }
 
-TEST(NAI_GoToGoalTest, When_Evaluate_Then_Null)
+TEST(NAI_GoToGoalTest, When_AddNewStimulusAcceptance_Then_StimulusIsAccepted)
 {
-	ASSERT_TRUE(false);
+	const auto goal = std::make_shared<NiceMock<BaseGoal>>();
+	goal->AddStimulusAcceptance(
+		StimulusMock::GetStimulusClassName(),
+		[]()
+		{
+			return nullptr;
+		});
+
+	const auto stimulus = std::make_shared<StimulusMock>();
+	ASSERT_TRUE(goal->IsStimulusAccepted(stimulus));
+}
+
+TEST(NAI_GoToGoalTest, When_TransformStimulusToPredicateWithNoAcceptance_Then_Null)
+{
+	const auto goal = std::make_shared<NiceMock<BaseGoal>>();
+	const auto stimulus = std::make_shared<StimulusMock>();
+
+	const auto predicate = goal->TransformStimulusIntoPredicates(stimulus);
+	ASSERT_TRUE(predicate == nullptr);
+}
+
+TEST(NAI_GoToGoalTest, When_TransformStimulusToPredicateWithAcceptance_Then_NewPredicate)
+{
+	const auto goal = std::make_shared<NiceMock<BaseGoal>>();
+	goal->AddStimulusAcceptance(
+		StimulusMock::GetStimulusClassName(),
+		[]()
+		{
+			return std::make_shared<BasePredicate>("Predicate A");
+		});
+
+	const auto stimulus = std::make_shared<StimulusMock>();
+	ASSERT_TRUE(goal->IsStimulusAccepted(stimulus));
+
+	const auto predicate = goal->TransformStimulusIntoPredicates(stimulus);
+	ASSERT_TRUE(predicate != nullptr);
 }
