@@ -381,7 +381,7 @@ TEST(NAI_GoToGoalTest, When_AddNewStimulusAcceptance_Then_StimulusIsAccepted)
 	const auto goal = std::make_shared<NiceMock<BaseGoal>>();
 	goal->AddStimulusAcceptance(
 		StimulusMock::GetStimulusClassName(),
-		[]()
+		[](std::shared_ptr<IStimulus> stimulus)
 		{
 			return nullptr;
 		});
@@ -404,7 +404,7 @@ TEST(NAI_GoToGoalTest, When_TransformStimulusToPredicateWithAcceptance_Then_NewP
 	const auto goal = std::make_shared<NiceMock<BaseGoal>>();
 	goal->AddStimulusAcceptance(
 		StimulusMock::GetStimulusClassName(),
-		[]()
+		[](std::shared_ptr<IStimulus> stimulus)
 		{
 			return std::make_shared<BasePredicate>("Predicate A");
 		});

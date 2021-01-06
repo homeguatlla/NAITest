@@ -6,7 +6,7 @@
 #include "goap/agent/BaseAgent.h"
 #include "goap/planners/TreeGoapPlanner.h"
 #include "goap/predicates/PlaceIamPredicate.h"
-#include "goap/sensory/PerceptionSystem.h"
+#include "goap/sensory/CognitiveSystem.h"
 #include "goap/sensory/IStimulus.h"
 
 using namespace NAI::Goap;
@@ -19,7 +19,8 @@ public:
 		std::shared_ptr<NAI::Goap::IGoapPlanner> planner,
 		std::vector<std::shared_ptr<IGoal>>& goals,
 		std::vector<std::shared_ptr<IPredicate>>& predicates) :
-	BaseAgent(planner, goals, predicates)
+	BaseAgent(planner, goals, predicates),
+	mHasReceivedNewPredicate { false }
 	{
 		ON_CALL(*this, IsStimulusAccepted).WillByDefault(
             [this](std::shared_ptr<IStimulus> stimulus)
@@ -35,16 +36,25 @@ public:
             	
 				return result;
             });
+		ON_CALL(*this, OnNewPredicate).WillByDefault(
+            [this](std::shared_ptr<IPredicate> predicate)
+            {
+            	mHasReceivedNewPredicate = true;
+            });
 	}
 	
 	virtual ~AgentCognitiveMock() = default;
 
+	bool HasNewPredicate() const { return mHasReceivedNewPredicate; }
 	glm::vec3 GetPosition() const { return {}; }
 	void MoveTo(float elapsedTime, const glm::vec3& point) {}
 
 	MOCK_METHOD1(OnNewPredicate, void(std::shared_ptr<IPredicate>));
 	MOCK_CONST_METHOD1(IsStimulusAccepted, bool(std::shared_ptr<IStimulus>));
 	MOCK_CONST_METHOD1(TransformStimulusIntoPredicates, const std::vector<std::shared_ptr<IPredicate>>(std::shared_ptr<IStimulus> stimulus));
+
+private:
+	bool mHasReceivedNewPredicate;
 };
 
 class MemoryMock : public Memory<IStimulus>
@@ -64,7 +74,20 @@ public:
 	MOCK_CONST_METHOD0(GetPosition, glm::vec3());
 };
 
-TEST(NAI_PerceptionSystem, When_Update_Then_)
+TEST(NAI_CognitiveSystem, When_Update_AndMemoryNotEmpty_AndGoalsAcceptingStimulus_Then_NewPredicatesAreNotifiedToAgent)
 {
+	CognitiveSystem cognitiveSystem;
+	MemoryMock memory;
+	memory.Add(std::make_shared<NiceMock<StimulusMock>>());
 	
+	auto goapPlanner = std::make_shared<TreeGoapPlanner>();
+	std::vector<std::shared_ptr<IGoal>> goals;
+	std::vector<std::shared_ptr<IPredicate>> predicates;
+	
+	const auto agent = std::make_shared<NiceMock<AgentCognitiveMock>>(goapPlanner, goals, predicates);
+	
+	cognitiveSystem.Update(0.16f, memory, agent);
+	
+	//EXPECT_CALL(*agent, OnNewPredicate).Times(1);
+	ASSERT_TRUE(agent->HasNewPredicate());
 }
