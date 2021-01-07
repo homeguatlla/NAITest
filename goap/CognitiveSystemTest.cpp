@@ -64,11 +64,11 @@ public:
 	virtual ~MemoryMock() = default;	
 };
 
-class StimulusMock : public IStimulus
+class StimulusCognitiveMock : public IStimulus
 {
 public:
-	StimulusMock() = default;
-	virtual ~StimulusMock() = default;
+	StimulusCognitiveMock() = default;
+	virtual ~StimulusCognitiveMock() = default;
 
 	MOCK_CONST_METHOD0(GetClassName, std::string());
 	MOCK_CONST_METHOD0(GetPosition, glm::vec3());
@@ -78,7 +78,7 @@ TEST(NAI_CognitiveSystem, When_Update_AndMemoryNotEmpty_AndGoalsAcceptingStimulu
 {
 	CognitiveSystem cognitiveSystem;
 	MemoryMock memory;
-	memory.Add(std::make_shared<NiceMock<StimulusMock>>());
+	memory.Add(std::make_shared<NiceMock<StimulusCognitiveMock>>());
 	
 	auto goapPlanner = std::make_shared<TreeGoapPlanner>();
 	std::vector<std::shared_ptr<IGoal>> goals;

@@ -372,7 +372,7 @@ TEST(NAI_GoToGoalTest, When_IsStimulusAcceptedButNoAddedAnyStimulusAcceptance_Th
 {
 	const auto goal = std::make_shared<NiceMock<BaseGoal>>();
 	
-	const auto stimulus = std::make_shared<StimulusMock>();
+	const auto stimulus = std::make_shared<NiceMock<StimulusMock>>();
 	ASSERT_FALSE(goal->IsStimulusAccepted(stimulus));
 }
 
@@ -386,14 +386,14 @@ TEST(NAI_GoToGoalTest, When_AddNewStimulusAcceptance_Then_StimulusIsAccepted)
 			return nullptr;
 		});
 
-	const auto stimulus = std::make_shared<StimulusMock>();
+	const auto stimulus = std::make_shared<NiceMock<StimulusMock>>();
 	ASSERT_TRUE(goal->IsStimulusAccepted(stimulus));
 }
 
 TEST(NAI_GoToGoalTest, When_TransformStimulusToPredicateWithNoAcceptance_Then_Null)
 {
 	const auto goal = std::make_shared<NiceMock<BaseGoal>>();
-	const auto stimulus = std::make_shared<StimulusMock>();
+	const auto stimulus = std::make_shared<NiceMock<StimulusMock>>();
 
 	const auto predicate = goal->TransformStimulusIntoPredicates(stimulus);
 	ASSERT_TRUE(predicate == nullptr);
@@ -409,7 +409,7 @@ TEST(NAI_GoToGoalTest, When_TransformStimulusToPredicateWithAcceptance_Then_NewP
 			return std::make_shared<BasePredicate>("Predicate A");
 		});
 
-	const auto stimulus = std::make_shared<StimulusMock>();
+	const auto stimulus = std::make_shared<NiceMock<StimulusMock>>();
 	ASSERT_TRUE(goal->IsStimulusAccepted(stimulus));
 
 	const auto predicate = goal->TransformStimulusIntoPredicates(stimulus);
