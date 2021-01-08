@@ -18,10 +18,19 @@ class AgentPerceptionMock : public BaseAgent
 {
 public:
 	AgentPerceptionMock(
+        std::shared_ptr<NAI::Goap::IGoapPlanner> planner,
+        const std::vector<std::shared_ptr<IGoal>>& goals,
+        const std::vector<std::shared_ptr<IPredicate>>& predicates) :
+        AgentPerceptionMock(planner, goals, predicates, nullptr)
+	{
+	}
+	
+	AgentPerceptionMock(
 		std::shared_ptr<NAI::Goap::IGoapPlanner> planner,
 		const std::vector<std::shared_ptr<IGoal>>& goals,
-		const std::vector<std::shared_ptr<IPredicate>>& predicates) :
-	BaseAgent(planner, goals, predicates)
+		const std::vector<std::shared_ptr<IPredicate>>& predicates,
+		const std::shared_ptr<PerceptionSystem> perceptionSystem) :
+		BaseAgent(planner, goals, predicates, perceptionSystem)
 	{
 		ON_CALL(*this, IsStimulusAccepted).WillByDefault(
             [this](std::shared_ptr<IStimulus> stimulus)
@@ -46,6 +55,7 @@ public:
 
 	MOCK_CONST_METHOD1(IsStimulusAccepted, bool(std::shared_ptr<IStimulus>));
 	MOCK_CONST_METHOD1(TransformStimulusIntoPredicates, const std::vector<std::shared_ptr<IPredicate>>(std::shared_ptr<IStimulus> stimulus));
+	//MOCK_METHOD1(OnNewPredicate, void(std::shared_ptr<IPredicate>));
 };
 
 class MemoryMock : public Memory<IStimulus>
@@ -133,16 +143,14 @@ TEST(NAI_PerceptionSystem, When_Update_Then_NewPredicatesAreAddedToTheAgent)
 	AgentBuilder agentBuilder;
 	auto agent =	agentBuilder.WithGoapPlanner(std::make_shared<NiceMock<DirectGoapPlanner>>())
 											.WithSensoryThreshold(stimulus->GetClassName(), threshold)
+											.WithPerceptionSystem(sensoryMock)
 											.Build<AgentPerceptionMock>();
 
-	PerceptionSystem perceptionSystem(sensoryMock);
-	
 	ASSERT_TRUE(agent->GetPredicates().empty());
 
 	sensoryMock->OnNotification(stimulus);
 	agent->Update(0.16f); // to make the current state be set.
-	perceptionSystem.Update(0.16f, agent);
-	
+	agent->Update(0.16f); 
 	ASSERT_FALSE(agent->GetPredicates().empty());
 }
 

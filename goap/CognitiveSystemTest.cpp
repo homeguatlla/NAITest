@@ -17,10 +17,19 @@ class AgentCognitiveMock : public BaseAgent
 {
 public:
 	AgentCognitiveMock(
+        std::shared_ptr<NAI::Goap::IGoapPlanner> planner,
+        const std::vector<std::shared_ptr<IGoal>>& goals,
+        const std::vector<std::shared_ptr<IPredicate>>& predicates) :
+	AgentCognitiveMock(planner, goals, predicates, nullptr)
+	{
+		
+	}
+	AgentCognitiveMock(
 		std::shared_ptr<NAI::Goap::IGoapPlanner> planner,
 		const std::vector<std::shared_ptr<IGoal>>& goals,
-		const std::vector<std::shared_ptr<IPredicate>>& predicates) :
-	BaseAgent(planner, goals, predicates),
+		const std::vector<std::shared_ptr<IPredicate>>& predicates,
+		const std::shared_ptr<PerceptionSystem> perceptionSystem) :
+	BaseAgent(planner, goals, predicates, perceptionSystem),
 	mHasReceivedNewPredicate { false }
 	{
 		ON_CALL(*this, IsStimulusAccepted).WillByDefault(

@@ -28,9 +28,17 @@ class AgentWalkerMock : public BaseAgent
 public:
 	AgentWalkerMock(std::shared_ptr<IGoapPlanner> DirectGoapPlanner,
 		const std::vector<std::shared_ptr<IGoal>>& goals,
-		const std::vector<std::shared_ptr<IPredicate>>& predicates) : BaseAgent(DirectGoapPlanner, goals, predicates),
-		mPosition { 0.0f },
-		mSpeed { 0.0f }
+		const std::vector<std::shared_ptr<IPredicate>>& predicates) :
+		AgentWalkerMock(DirectGoapPlanner, goals, predicates, nullptr)
+	{
+	}
+
+	AgentWalkerMock(std::shared_ptr<IGoapPlanner> DirectGoapPlanner,
+        const std::vector<std::shared_ptr<IGoal>>& goals,
+        const std::vector<std::shared_ptr<IPredicate>>& predicates,
+        const std::shared_ptr<PerceptionSystem> perceptionSystem) : BaseAgent(DirectGoapPlanner, goals, predicates, perceptionSystem),
+        mPosition { 0.0f },
+        mSpeed { 0.0f }
 	{
 	}
 

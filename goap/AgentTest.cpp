@@ -18,10 +18,19 @@ class AgentMock : public BaseAgent
 public:
 	AgentMock(const std::shared_ptr<IGoapPlanner> goapPlanner,
 		const std::vector<std::shared_ptr<IGoal>>& goals,
-		const std::vector<std::shared_ptr<IPredicate>>& predicates) : BaseAgent(goapPlanner, goals, predicates)
+		const std::vector<std::shared_ptr<IPredicate>>& predicates) :
+	AgentMock(goapPlanner, goals, predicates, nullptr)
 	{
 	}
-
+	
+	AgentMock(const std::shared_ptr<IGoapPlanner> goapPlanner,
+            const std::vector<std::shared_ptr<IGoal>>& goals,
+            const std::vector<std::shared_ptr<IPredicate>>& predicates,
+            const std::shared_ptr<PerceptionSystem> perceptionSystem) :
+	BaseAgent(goapPlanner, goals, predicates, perceptionSystem)
+	{
+	}
+	
 	virtual ~AgentMock() = default;
 
 	glm::vec3 GetPosition() const override { return position; }
