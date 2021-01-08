@@ -3,6 +3,7 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 #include "goap/BaseGoal.h"
+#include "goap/agent/AgentBuilder.h"
 #include "goap/agent/BaseAgent.h"
 #include "goap/planners/TreeGoapPlanner.h"
 #include "goap/predicates/PlaceIamPredicate.h"
@@ -17,8 +18,8 @@ class AgentCognitiveMock : public BaseAgent
 public:
 	AgentCognitiveMock(
 		std::shared_ptr<NAI::Goap::IGoapPlanner> planner,
-		std::vector<std::shared_ptr<IGoal>>& goals,
-		std::vector<std::shared_ptr<IPredicate>>& predicates) :
+		const std::vector<std::shared_ptr<IGoal>>& goals,
+		const std::vector<std::shared_ptr<IPredicate>>& predicates) :
 	BaseAgent(planner, goals, predicates),
 	mHasReceivedNewPredicate { false }
 	{
@@ -80,14 +81,16 @@ TEST(NAI_CognitiveSystem, When_Update_AndMemoryNotEmpty_AndGoalsAcceptingStimulu
 	MemoryMock memory;
 	memory.Add(std::make_shared<NiceMock<StimulusCognitiveMock>>());
 	
-	auto goapPlanner = std::make_shared<TreeGoapPlanner>();
-	std::vector<std::shared_ptr<IGoal>> goals;
-	std::vector<std::shared_ptr<IPredicate>> predicates;
+	const auto goapPlanner = std::make_shared<TreeGoapPlanner>();
 	
-	const auto agent = std::make_shared<NiceMock<AgentCognitiveMock>>(goapPlanner, goals, predicates);
+	AgentBuilder agentBuilder;
+	const auto agent =	agentBuilder.WithGoapPlanner(goapPlanner)
+														.Build<AgentCognitiveMock>();
+	//const auto agent = std::make_shared<NiceMock<AgentCognitiveMock>>(goapPlanner, goals, predicates);
 	
 	cognitiveSystem.Update(0.16f, memory, agent);
-	
+
+	auto agentCognitive = std::static_pointer_cast<AgentCognitiveMock>(agent);
 	//EXPECT_CALL(*agent, OnNewPredicate).Times(1);
-	ASSERT_TRUE(agent->HasNewPredicate());
+	ASSERT_TRUE(agentCognitive->HasNewPredicate());
 }

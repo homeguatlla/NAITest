@@ -3,6 +3,7 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 #include "goap/BaseGoal.h"
+#include "goap/agent/AgentBuilder.h"
 #include "goap/agent/BaseAgent.h"
 #include "goap/planners/TreeGoapPlanner.h"
 #include "goap/predicates/PlaceIamPredicate.h"
@@ -18,8 +19,8 @@ class AgentPerceptionMock : public BaseAgent
 public:
 	AgentPerceptionMock(
 		std::shared_ptr<NAI::Goap::IGoapPlanner> planner,
-		std::vector<std::shared_ptr<IGoal>>& goals,
-		std::vector<std::shared_ptr<IPredicate>>& predicates) :
+		const std::vector<std::shared_ptr<IGoal>>& goals,
+		const std::vector<std::shared_ptr<IPredicate>>& predicates) :
 	BaseAgent(planner, goals, predicates)
 	{
 		ON_CALL(*this, IsStimulusAccepted).WillByDefault(
@@ -129,13 +130,11 @@ TEST(NAI_PerceptionSystem, When_Update_Then_NewPredicatesAreAddedToTheAgent)
 	const auto threshold = std::make_shared<NiceMock<ThresholdMock>>(true);
 	const auto sensoryMock = std::make_shared<NiceMock<SensoryMock>>();
 	
-	auto goapPlanner = std::make_shared<NiceMock<DirectGoapPlanner>>();
-	std::vector<std::shared_ptr<IGoal>> goals;
-	std::vector<std::shared_ptr<IPredicate>> predicates;
-	
-	auto agent = std::make_shared<NiceMock<AgentPerceptionMock>>(goapPlanner, goals, predicates);
-	agent->AddSensoryThreshold(stimulus->GetClassName(), threshold);
-	
+	AgentBuilder agentBuilder;
+	auto agent =	agentBuilder.WithGoapPlanner(std::make_shared<NiceMock<DirectGoapPlanner>>())
+											.WithSensoryThreshold(stimulus->GetClassName(), threshold)
+											.Build<AgentPerceptionMock>();
+
 	PerceptionSystem perceptionSystem(sensoryMock);
 	
 	ASSERT_TRUE(agent->GetPredicates().empty());

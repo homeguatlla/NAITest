@@ -14,6 +14,8 @@
 #include "navigation/INavigationPath.h"
 #include <memory>
 
+#include "goap/agent/AgentBuilder.h"
+
 
 using namespace NAI::Goap;
 using namespace NAI::Navigation;
@@ -24,14 +26,20 @@ static const float MOVEMENT_PRECISION = 0.01f;
 class AgentWalkerMock : public BaseAgent
 {
 public:
-	AgentWalkerMock(const glm::vec3& position, float speed, std::shared_ptr<IGoapPlanner> DirectGoapPlanner,
-		std::vector<std::shared_ptr<IGoal>>& goals,
-		std::vector<std::shared_ptr<IPredicate>>& predicates) : BaseAgent(DirectGoapPlanner, goals, predicates),
-		mPosition { position },
-		mSpeed { speed }
+	AgentWalkerMock(std::shared_ptr<IGoapPlanner> DirectGoapPlanner,
+		const std::vector<std::shared_ptr<IGoal>>& goals,
+		const std::vector<std::shared_ptr<IPredicate>>& predicates) : BaseAgent(DirectGoapPlanner, goals, predicates),
+		mPosition { 0.0f },
+		mSpeed { 0.0f }
 	{
 	}
 
+	void SetParameters(const glm::vec3& position, float speed)
+	{
+		mPosition = position;
+		mSpeed = speed;
+	}
+	
 	virtual ~AgentWalkerMock() = default;
 
 	glm::vec3 GetPosition() const override { return mPosition; }
@@ -178,22 +186,22 @@ TEST(NAI_GoToGoalTest, When_AgentHasToGo_Then_Arrives)
 	path.emplace_back(glm::vec3(5, 0, 5));
 	path.emplace_back(glm::vec3(5, 0, 10));
 
-	auto goapPlanner = std::make_shared<NiceMock<DirectGoapPlanner>>();
+	const auto goapPlanner = std::make_shared<NiceMock<DirectGoapPlanner>>();
 	auto navigationPlanner = std::make_shared<NiceMock<NavigationPlannerMock>>(path);
 
 	std::string destinationPlaceName("Saloon");
-	std::vector<std::shared_ptr<IPredicate>> predicates;
-	predicates.push_back(std::make_shared<GoToPredicate>("GoTo", destinationPlaceName));
+
+	AgentBuilder agentBuilder;
+	auto agent =	agentBuilder.WithGoapPlanner(goapPlanner)
+								.WithGoal(std::make_shared<NiceMock<GoToGoalMock>>(navigationPlanner))
+								.WithPredicate(std::make_shared<GoToPredicate>("GoTo", destinationPlaceName))
+								.Build<AgentWalkerMock>();
+	auto agentWalker = std::static_pointer_cast<AgentWalkerMock>(agent);
 	
-	std::vector<std::shared_ptr<IGoal>> goals;
-	const auto goal = std::make_shared<NiceMock<GoToGoalMock>>(navigationPlanner);
-	goals.push_back(goal);
-
-	glm::vec3 originPoint(0.0f);
-	auto speed = 10.f;
-
-	auto agent = std::make_shared<NiceMock<AgentWalkerMock>>(originPoint, speed, goapPlanner, goals, predicates);
-
+	const glm::vec3 originPoint(0.0f);
+	const auto speed = 10.f;
+	agentWalker->SetParameters(originPoint, speed);
+	
 	agent->StartUp();
 	
 	for(auto i = 0; i < 936; ++i)
@@ -212,22 +220,23 @@ TEST(NAI_GoToGoalTest, When_AgentHasToGoAndNewPredicate_Then_Abort)
 	path.emplace_back(glm::vec3(5, 0, 5));
 	path.emplace_back(glm::vec3(5, 0, 10));
 	
-	auto goapPlanner = std::make_shared<NiceMock<DirectGoapPlanner>>();
+	const auto goapPlanner = std::make_shared<NiceMock<DirectGoapPlanner>>();
 	auto navigationPlanner = std::make_shared<NiceMock<NavigationPlannerMock>>(path);
 
 	std::string destinationPlaceName("Saloon");
-	std::vector<std::shared_ptr<IPredicate>> predicates;
-	predicates.push_back(std::make_shared<GoToPredicate>("GoTo", destinationPlaceName));
-
-	std::vector<std::shared_ptr<IGoal>> goals;
-	const auto goal = std::make_shared<NiceMock<GoToGoalMock>>(navigationPlanner);	
-	goals.push_back(goal);
-
-	glm::vec3 originPoint(0.0f);
-	auto speed = 10.f;
-
-	auto agent = std::make_shared<NiceMock<AgentWalkerMock>>(originPoint, speed, goapPlanner, goals, predicates);
-
+	const auto goal = std::make_shared<NiceMock<GoToGoalMock>>(navigationPlanner);
+	
+	AgentBuilder agentBuilder;
+	auto agent =	agentBuilder.WithGoapPlanner(goapPlanner)
+                                .WithGoal(goal)
+                                .WithPredicate(std::make_shared<GoToPredicate>("GoTo", destinationPlaceName))
+                                .Build<AgentWalkerMock>();
+	auto agentWalker = std::static_pointer_cast<AgentWalkerMock>(agent);
+	
+	const glm::vec3 originPoint(0.0f);
+	const auto speed = 10.f;
+	agentWalker->SetParameters(originPoint, speed);
+	
 	agent->StartUp();
 
 	for (auto i = 0; i < 73; ++i)
@@ -241,7 +250,7 @@ TEST(NAI_GoToGoalTest, When_AgentHasToGoAndNewPredicate_Then_Abort)
 	agent->Update(0.016f);
 
 	ASSERT_TRUE(agent->GetPosition() == glm::vec3(5.0f, 0.0f, 5.63999939f));
-	ASSERT_FALSE(agent->WhereIam() == "Saloon");
+	ASSERT_FALSE(agent->WhereIam() == destinationPlaceName);
 	ASSERT_TRUE(agent->GetCurrentState() == AgentState::STATE_PLANNING);
 }
 
@@ -252,22 +261,23 @@ TEST(NAI_GoToGoalTest, When_AgentHasToGoAndNewPredicate_Then_AbortAndRestartsThe
 	path.emplace_back(glm::vec3(5, 0, 5));
 	path.emplace_back(glm::vec3(5, 0, 10));
 	
-	auto goapPlanner = std::make_shared<NiceMock<DirectGoapPlanner>>();
+	const auto goapPlanner = std::make_shared<NiceMock<DirectGoapPlanner>>();
 	auto navigationPlanner = std::make_shared<NiceMock<NavigationPlannerMock>>(path);
 
 	std::string destinationPlaceName("Saloon");
-	std::vector<std::shared_ptr<IPredicate>> predicates;
-	predicates.push_back(std::make_shared<GoToPredicate>("GoTo", destinationPlaceName));
-
-	std::vector<std::shared_ptr<IGoal>> goals;
 	const auto goal = std::make_shared<NiceMock<GoToGoalMock>>(navigationPlanner);
-	goals.push_back(goal);
-
-	glm::vec3 originPoint(0.0f);
-	auto speed = 10.f;
-
-	auto agent = std::make_shared<NiceMock<AgentWalkerMock>>(originPoint, speed, goapPlanner, goals, predicates);
-
+	
+	AgentBuilder agentBuilder;
+	auto agent =	agentBuilder.WithGoapPlanner(goapPlanner)
+                                .WithGoal(goal)
+                                .WithPredicate(std::make_shared<GoToPredicate>("GoTo", destinationPlaceName))
+                                .Build<AgentWalkerMock>();
+	auto agentWalker = std::static_pointer_cast<AgentWalkerMock>(agent);
+	
+	const glm::vec3 originPoint(0.0f);
+	const auto speed = 10.f;
+	agentWalker->SetParameters(originPoint, speed);
+	
 	agent->StartUp();
 
 	for (auto i = 0; i < 73; ++i)
@@ -285,7 +295,7 @@ TEST(NAI_GoToGoalTest, When_AgentHasToGoAndNewPredicate_Then_AbortAndRestartsThe
 	}
 
 	ASSERT_TRUE(glm::distance(agent->GetPosition(), navigationPlanner->GetLocationGivenAName(destinationPlaceName)) < MOVEMENT_PRECISION);
-	ASSERT_TRUE(agent->WhereIam() == "Saloon");
+	ASSERT_TRUE(agent->WhereIam() == destinationPlaceName);
 	ASSERT_TRUE(agent->GetCurrentState() == AgentState::STATE_PLANNING);
 }
 
@@ -294,24 +304,24 @@ TEST(NAI_GoToGoalTest, When_AgentHasTwoPlacesToGo_Then_ArrivesAtPlaceWithLessCos
 	std::vector<glm::vec3> path;
 	path.emplace_back(glm::vec3(0, 0, 5));
 	
-	auto goapPlanner = std::make_shared<NiceMock<TreeGoapPlanner>>();
+	const auto goapPlanner = std::make_shared<NiceMock<TreeGoapPlanner>>();
 	auto navigationPlanner = std::make_shared<NiceMock<NavigationPlannerMock>>(path);
 
 	std::string destinationPlaceSaloonName("Saloon");
 	std::string destinationPlaceGeneralStoreName("GeneralStore");
-	std::vector<std::shared_ptr<IPredicate>> predicates;
-	predicates.push_back(std::make_shared<GoToPredicate>("GoTo", destinationPlaceSaloonName));
-	predicates.push_back(std::make_shared<GoToPredicate>("GoTo", destinationPlaceGeneralStoreName));
-
-	std::vector<std::shared_ptr<IGoal>> goals;
-	const auto goal = std::make_shared<NiceMock<GoToGoalMock>>(navigationPlanner);
-	goals.push_back(goal);
-
-	glm::vec3 originPoint(0.0f);
-	auto speed = 10.f;
-
-	auto agent = std::make_shared<NiceMock<AgentWalkerMock>>(originPoint, speed, goapPlanner, goals, predicates);
-
+	
+	AgentBuilder agentBuilder;
+	auto agent =	agentBuilder.WithGoapPlanner(goapPlanner)
+                                .WithGoal(std::make_shared<NiceMock<GoToGoalMock>>(navigationPlanner))
+                                .WithPredicate(std::make_shared<GoToPredicate>("GoTo", destinationPlaceSaloonName))
+								.WithPredicate(std::make_shared<GoToPredicate>("GoTo", destinationPlaceGeneralStoreName))
+                                .Build<AgentWalkerMock>();
+	auto agentWalker = std::static_pointer_cast<AgentWalkerMock>(agent);
+	
+	const glm::vec3 originPoint(0.0f);
+	const auto speed = 10.f;
+	agentWalker->SetParameters(originPoint, speed);
+	
 	agent->StartUp();
 
 	//from 0,0,0 to 0, 0, 5 = dist  = 5 /0.016 = 312 speed = 10 --> 35 frames (no cuadra +3)
@@ -337,22 +347,22 @@ TEST(NAI_GoToGoalTest, When_AgentArrivedAtPlace_GoToPlanningAndNoPlan)
 	std::vector<glm::vec3> path;
 	path.emplace_back(glm::vec3(0, 0, 5));
 	
-	auto goapPlanner = std::make_shared<NiceMock<TreeGoapPlanner>>();
+	const auto goapPlanner = std::make_shared<NiceMock<TreeGoapPlanner>>();
 	auto navigationPlanner = std::make_shared<NiceMock<NavigationPlannerMock>>(path);
 
 	std::string destinationPlaceGeneralStoreName("GeneralStore");
-	std::vector<std::shared_ptr<IPredicate>> predicates;
-	predicates.push_back(std::make_shared<GoToPredicate>("GoTo", destinationPlaceGeneralStoreName));
-
-	std::vector<std::shared_ptr<IGoal>> goals;
-	const auto goal = std::make_shared<NiceMock<GoToGoalMock>>(navigationPlanner);
-	goals.push_back(goal);
-
-	glm::vec3 originPoint(0.0f);
-	auto speed = 10.f;
-
-	auto agent = std::make_shared<NiceMock<AgentWalkerMock>>(originPoint, speed, goapPlanner, goals, predicates);
-
+	
+	AgentBuilder agentBuilder;
+	auto agent =	agentBuilder.WithGoapPlanner(goapPlanner)
+                                .WithGoal(std::make_shared<NiceMock<GoToGoalMock>>(navigationPlanner))
+                                .WithPredicate(std::make_shared<GoToPredicate>("GoTo", destinationPlaceGeneralStoreName))
+                                .Build<AgentWalkerMock>();
+	auto agentWalker = std::static_pointer_cast<AgentWalkerMock>(agent);
+	
+	const glm::vec3 originPoint(0.0f);
+	const auto speed = 10.f;
+	agentWalker->SetParameters(originPoint, speed);
+	
 	agent->StartUp();
 
 	for (auto i = 0; i < 765; ++i)
@@ -360,9 +370,8 @@ TEST(NAI_GoToGoalTest, When_AgentArrivedAtPlace_GoToPlanningAndNoPlan)
 		agent->Update(0.016f);
 	}
 
-	const std::string destinationPlaceName("GeneralStore");
-	ASSERT_TRUE(glm::distance(agent->GetPosition(), navigationPlanner->GetLocationGivenAName(destinationPlaceName)) < MOVEMENT_PRECISION);
-	ASSERT_TRUE(agent->WhereIam() == "GeneralStore");
+	ASSERT_TRUE(glm::distance(agent->GetPosition(), navigationPlanner->GetLocationGivenAName(destinationPlaceGeneralStoreName)) < MOVEMENT_PRECISION);
+	ASSERT_TRUE(agent->WhereIam() == destinationPlaceGeneralStoreName);
 
 	agent->Update(0.016f);
 
