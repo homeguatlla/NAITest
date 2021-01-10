@@ -1,6 +1,5 @@
 //#include "pchTest.h"
 #include "gtest/gtest.h"
-#include "goap/IAction.h"
 #include "goap/BaseAction.h"
 #include "goap/IPredicate.h"
 #include "goap/BasePredicate.h"

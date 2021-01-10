@@ -45,6 +45,7 @@
     <ClCompile Include="goap\MemoryTest.cpp" />
     <ClCompile Include="goap\PerceptionSystemTest.cpp" />
     <ClCompile Include="goap\PredicatesHandlerTest.cpp" />
+    <ClCompile Include="goap\ChikenTest.cpp" />
     <ClCompile Include="goap\SensorySystemTest.cpp" />
     <ClCompile Include="goap\TreePlannerTest.cpp" />
     <ClCompile Include="pchTest.cpp">

@@ -99,9 +99,12 @@ TEST(NAI_Memory, When_PerformActionOnEach_Then_ActionIsBeingExecutedForEachMemor
 
 	auto i = 0;
 	memory.PerformActionForEach(
-		[ids, &i](std::shared_ptr<StimulusMock> stimulus)
+		[ids, &i](std::shared_ptr<StimulusMock> stimulus) -> bool 
 		{
-			ASSERT_TRUE(stimulus->GetId() == ids[i]);
+			//Expect_true instead of Assert_True because the lambda need to return a boolean and
+			//assert_True returns a void causing an error.
+			EXPECT_TRUE(stimulus->GetId() == ids[i]);
 			++i;
+			return true;
 		});	
 }

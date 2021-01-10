@@ -163,7 +163,7 @@ TEST(NAI_SensorySystem, When_SuscribedToASensor_And_NewStimulus_Then_TheStimulus
 	ASSERT_FALSE(sensoryElements.empty());
 }
 
-TEST(NAI_SensorySystem, When_Update_And_StimulusIntoTheThreshold_Then_TheListOfStimulusIsNOTEmpty)
+TEST(NAI_SensorySystem, When_Update_And_StimulusIntoTheThreshold_Then_TheMemoryIsNOTEmpty)
 {
 	HearingSensorMock hearingSensorMock;
 	const auto sensorySystem = std::make_shared<SensorySystem<IStimulus>>();
@@ -183,7 +183,27 @@ TEST(NAI_SensorySystem, When_Update_And_StimulusIntoTheThreshold_Then_TheListOfS
 	ASSERT_FALSE(memory.IsEmpty());
 }
 
-TEST(NAI_SensorySystem, When_Update_And_StimulusOutsideTheThreshold_Then_TheListOfStimulusIsEmpty)
+TEST(NAI_SensorySystem, When_Update_And_StimulusIntoTheThreshold_Then_TheListOfStimulusIsEmpty)
+{
+	HearingSensorMock hearingSensorMock;
+	const auto sensorySystem = std::make_shared<SensorySystem<IStimulus>>();
+	Memory<IStimulus> memory;
+	
+	EXPECT_CALL(hearingSensorMock, Subscribe).Times(1);
+	EXPECT_CALL(hearingSensorMock, Update).Times(1);
+	
+	hearingSensorMock.Subscribe(sensorySystem);
+	hearingSensorMock.Update(0.16f);
+
+	const auto threshold = std::make_shared<NiceMock<HearingThresholdMock>>(true);
+	std::map<std::string, std::shared_ptr<IThreshold>> sensorThresholdsMap;
+	sensorThresholdsMap[typeid(NiceMock<HearingStimulusMock>).name()] = threshold;
+	sensorySystem->Update(0.16, memory, sensorThresholdsMap);
+	
+	ASSERT_TRUE(sensorySystem->GetReceivedStimulus().empty());
+}
+
+TEST(NAI_SensorySystem, When_Update_And_StimulusOutsideTheThreshold_Then_TheMemoryIsEmpty)
 {
 	HearingSensorMock hearingSensorMock;
 	const auto sensorySystem = std::make_shared<SensorySystem<IStimulus>>();
@@ -202,7 +222,7 @@ TEST(NAI_SensorySystem, When_Update_And_StimulusOutsideTheThreshold_Then_TheList
 
 	ASSERT_TRUE(memory.IsEmpty());
 }
-TEST(NAI_SensorySystem, When_Update_And_StimulusOfSensorA_And_StimulusOfSensorB_And_OnlyAInsideTheThreshold_Then_TheListOfStimulusIsTheA)
+TEST(NAI_SensorySystem, When_Update_And_StimulusOfSensorA_And_StimulusOfSensorB_And_OnlyAInsideTheThreshold_Then_TheMemoryConteinsA)
 {
 	HearingSensorMock hearingSensorMock;
 	VisualSensorMock visualSensorMock;
@@ -233,4 +253,9 @@ TEST(NAI_SensorySystem, When_Update_And_StimulusOfSensorA_And_StimulusOfSensorB_
 	sensorySystem->Update(0.16f, memory, sensorThresholdsMap);
 
 	ASSERT_FALSE(memory.IsEmpty());
+	memory.PerformActionForEach([](std::shared_ptr<IStimulus> stimulus) -> bool
+	{
+		EXPECT_TRUE(stimulus->GetClassName() == typeid(NiceMock<HearingStimulusMock>).name());
+		return true;
+	});
 }
