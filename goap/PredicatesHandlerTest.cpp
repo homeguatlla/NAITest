@@ -21,7 +21,7 @@ TEST(NAI_PredicatesHandler, When_AddingAPredicate_Then_OneResultIsReturned)
 	PredicatesHandler predicatesHandler;
 
 	const auto predicate = std::make_shared<BasePredicate>(std::string("I feel good"));
-	predicatesHandler.Add(predicate);
+	predicatesHandler.AddOrReplace(predicate);
 	
 	const auto& predicatesList = predicatesHandler.GetPredicatesList();
 
@@ -40,7 +40,7 @@ TEST(NAI_PredicatesHandler, When_AddingSomePredicates_Then_TheyAreSaved)
 	{
 		const auto predicate = std::make_shared<BasePredicate>(text);
 		originalPredicates.push_back(predicate);
-		predicatesHandler.Add(predicate);
+		predicatesHandler.AddOrReplace(predicate);
 	}
 	
 	const auto& predicatesList = predicatesHandler.GetPredicatesList();
@@ -62,7 +62,7 @@ TEST(NAI_PredicatesHandler, When_AddingSomePredicates_And_FindAnyoneByTextThatDo
 	for (auto&& text : predicatesTexts)
 	{
 		const auto predicate = std::make_shared<BasePredicate>(text);
-		predicatesHandler.Add(predicate);
+		predicatesHandler.AddOrReplace(predicate);
 	}
 
 	const auto predicateFound = predicatesHandler.FindByText("not inserted predicate");
@@ -79,7 +79,7 @@ TEST(NAI_PredicatesHandler, When_AddingSomePredicates_And_FindAnyoneByText_Then_
 	for (auto&& text : predicatesTexts)
 	{
 		const auto predicate = std::make_shared<BasePredicate>(text);
-		predicatesHandler.Add(predicate);
+		predicatesHandler.AddOrReplace(predicate);
 	}
 
 	const auto predicateFound = predicatesHandler.FindByText(predicatesTexts[1]);
@@ -98,7 +98,7 @@ TEST(NAI_PredicatesHandler, When_AddingSomePredicates_And_FindAnyoneByIDThatDoes
 	{
 		const auto predicate = std::make_shared<BasePredicate>(text);
 		originalPredicates.push_back(predicate);
-		predicatesHandler.Add(predicate);
+		predicatesHandler.AddOrReplace(predicate);
 	}
 
 	const auto predicateFound = predicatesHandler.FindById(324);
@@ -117,7 +117,7 @@ TEST(NAI_PredicatesHandler, When_AddingSomePredicates_And_FindAnyoneByID_Then_Is
 	{
 		const auto predicate = std::make_shared<BasePredicate>(text);
 		originalPredicates.push_back(predicate);
-		predicatesHandler.Add(predicate);
+		predicatesHandler.AddOrReplace(predicate);
 	}
 
 	const auto predicateFound = predicatesHandler.FindById(originalPredicates[1]->GetID());
@@ -134,7 +134,7 @@ TEST(NAI_PredicatesHandler, When_Reset_Then_NewResetDataIsSaved)
 	for (auto&& text : predicatesTexts)
 	{
 		const auto predicate = std::make_shared<BasePredicate>(text);
-		predicatesHandler.Add(predicate);
+		predicatesHandler.AddOrReplace(predicate);
 	}
 	const auto predicatesList = predicatesHandler.GetPredicatesList();
 	

@@ -39,6 +39,7 @@
     <ClCompile Include="..\NGenius\packages\gmock.1.10.0\lib\native\src\gtest\src\gtest_main.cc" />
     <ClCompile Include="goap\ActionTest.cpp" />
     <ClCompile Include="goap\AgentTest.cpp" />
+    <ClCompile Include="goap\AgentWithSpecificStimulusCasesTest.cpp" />
     <ClCompile Include="goap\CognitiveSystemTest.cpp" />
     <ClCompile Include="goap\DirectPlannerTest.cpp" />
     <ClCompile Include="goap\GoToGoalTest.cpp" />
