@@ -32,14 +32,8 @@ public:
 	BaseAgent(planner, goals, predicates, perceptionSystem),
 	mHasReceivedNewPredicate { false }
 	{
-		ON_CALL(*this, IsStimulusAccepted).WillByDefault(
-            [this](std::shared_ptr<IStimulus> stimulus)
-            {
-                return true;
-            });
-
 		ON_CALL(*this, TransformStimulusIntoPredicates).WillByDefault(
-            [this](std::shared_ptr<IStimulus> stimulus)
+            [this](const Memory<IStimulus>& memory)
             {
             	std::vector<std::shared_ptr<IPredicate>> result;
             	result.push_back(std::make_shared<PlaceIamPredicate>("AtHome"));
@@ -60,8 +54,7 @@ public:
 	void MoveTo(float elapsedTime, const glm::vec3& point) {}
 
 	MOCK_METHOD1(OnNewPredicate, void(std::shared_ptr<IPredicate>));
-	MOCK_CONST_METHOD1(IsStimulusAccepted, bool(std::shared_ptr<IStimulus>));
-	MOCK_CONST_METHOD1(TransformStimulusIntoPredicates, const std::vector<std::shared_ptr<IPredicate>>(std::shared_ptr<IStimulus> stimulus));
+	MOCK_CONST_METHOD1(TransformStimulusIntoPredicates, const std::vector<std::shared_ptr<IPredicate>>(const Memory<IStimulus>&));
 
 private:
 	bool mHasReceivedNewPredicate;
@@ -95,11 +88,11 @@ TEST(NAI_CognitiveSystem, When_Update_AndMemoryNotEmpty_AndGoalsAcceptingStimulu
 	AgentBuilder agentBuilder;
 	const auto agent =	agentBuilder.WithGoapPlanner(goapPlanner)
 														.Build<AgentCognitiveMock>();
-	//const auto agent = std::make_shared<NiceMock<AgentCognitiveMock>>(goapPlanner, goals, predicates);
 	
 	cognitiveSystem.Update(0.16f, memory, agent);
 
 	auto agentCognitive = std::static_pointer_cast<AgentCognitiveMock>(agent);
+	
 	//EXPECT_CALL(*agent, OnNewPredicate).Times(1);
 	ASSERT_TRUE(agentCognitive->HasNewPredicate());
 }

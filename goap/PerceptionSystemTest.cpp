@@ -32,14 +32,8 @@ public:
 		const std::shared_ptr<PerceptionSystem> perceptionSystem) :
 		BaseAgent(planner, goals, predicates, perceptionSystem)
 	{
-		ON_CALL(*this, IsStimulusAccepted).WillByDefault(
-            [this](std::shared_ptr<IStimulus> stimulus)
-            {
-                return true;
-            });
-
 		ON_CALL(*this, TransformStimulusIntoPredicates).WillByDefault(
-            [this](std::shared_ptr<IStimulus> stimulus)
+            [this](const Memory<IStimulus>& memory)
             {
             	std::vector<std::shared_ptr<IPredicate>> result;
             	result.push_back(std::make_shared<PlaceIamPredicate>("AtHome"));
@@ -53,16 +47,7 @@ public:
 	glm::vec3 GetPosition() const { return {}; }
 	void MoveTo(float elapsedTime, const glm::vec3& point) {}
 
-	MOCK_CONST_METHOD1(IsStimulusAccepted, bool(std::shared_ptr<IStimulus>));
-	MOCK_CONST_METHOD1(TransformStimulusIntoPredicates, const std::vector<std::shared_ptr<IPredicate>>(std::shared_ptr<IStimulus> stimulus));
-	//MOCK_METHOD1(OnNewPredicate, void(std::shared_ptr<IPredicate>));
-};
-
-class MemoryMock : public Memory<IStimulus>
-{
-public:
-	MemoryMock() = default;
-	virtual ~MemoryMock() = default;	
+	MOCK_CONST_METHOD1(TransformStimulusIntoPredicates, const std::vector<std::shared_ptr<IPredicate>>(const Memory<IStimulus>&));
 };
 
 class SensoryMock : public SensorySystem<IStimulus>
@@ -73,11 +58,11 @@ public:
 	
 };
 
-class StimulusMock : public IStimulus
+class PerceptionStimulusMock : public IStimulus
 {
 public:
-	StimulusMock() = default;
-	virtual ~StimulusMock() = default;
+	PerceptionStimulusMock() = default;
+	virtual ~PerceptionStimulusMock() = default;
 
 	MOCK_CONST_METHOD0(GetClassName, std::string());
 	MOCK_CONST_METHOD0(GetPosition, glm::vec3());
@@ -102,28 +87,6 @@ private:
 	bool mIsPerceived;
 };
 
-class GoalMock : public BaseGoal
-{
-public:
-	GoalMock()
-	{
-		ON_CALL(*this, IsStimulusAccepted).WillByDefault(
-            [this](const std::shared_ptr<IStimulus> stimulus)
-            {
-                return true;
-            });
-		ON_CALL(*this, TransformStimulusIntoPredicates).WillByDefault(
-            [this](const std::shared_ptr<IStimulus> stimulus)
-            {
-                return std::make_shared<BasePredicate>("PredicateReactionToStimulus");
-            });
-	}
-
-	~GoalMock() = default;
-	MOCK_CONST_METHOD1(IsStimulusAccepted, bool(std::shared_ptr<IStimulus>));
-	MOCK_CONST_METHOD1(TransformStimulusIntoPredicates, std::shared_ptr<IPredicate>(std::shared_ptr<IStimulus> stimulus));
-};
-
 TEST(NAI_PerceptionSystem, When_Created_Then_MemoryIsEmpty)
 {
 	const auto sensoryMock = std::make_shared<NiceMock<SensoryMock>>();
@@ -136,21 +99,24 @@ TEST(NAI_PerceptionSystem, When_Created_Then_MemoryIsEmpty)
 
 TEST(NAI_PerceptionSystem, When_Update_Then_NewPredicatesAreAddedToTheAgent)
 {
-	const auto stimulus = std::make_shared<NiceMock<StimulusMock>>();
+	const auto stimulus = std::make_shared<NiceMock<PerceptionStimulusMock>>();
 	const auto threshold = std::make_shared<NiceMock<ThresholdMock>>(true);
 	const auto sensoryMock = std::make_shared<NiceMock<SensoryMock>>();
 	
 	AgentBuilder agentBuilder;
-	auto agent =	agentBuilder.WithGoapPlanner(std::make_shared<NiceMock<DirectGoapPlanner>>())
-											.WithSensoryThreshold(stimulus->GetClassName(), threshold)
-											.WithPerceptionSystem(sensoryMock)
-											.Build<AgentPerceptionMock>();
+	auto agent =	agentBuilder.WithGoapPlanner(std::make_shared<DirectGoapPlanner>())
+								.WithSensoryThreshold(stimulus->GetClassName(), threshold)
+								.WithPerceptionSystem(sensoryMock)
+								.Build<AgentPerceptionMock>();
 
 	ASSERT_TRUE(agent->GetPredicates().empty());
 
 	sensoryMock->OnNotification(stimulus);
 	agent->Update(0.16f); // to make the current state be set.
-	agent->Update(0.16f); 
+	agent->Update(0.16f);
+	
 	ASSERT_FALSE(agent->GetPredicates().empty());
 }
+
+//TODO tests pendientes, comprobar que se vacía la memoria, si hay sonido se queda temporal si es visual se borra?
 

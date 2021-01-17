@@ -178,7 +178,7 @@ TEST(NAI_SensorySystem, When_Update_And_StimulusIntoTheThreshold_Then_TheMemoryI
 	const auto threshold = std::make_shared<NiceMock<HearingThresholdMock>>(true);
 	std::map<std::string, std::shared_ptr<IThreshold>> sensorThresholdsMap;
 	sensorThresholdsMap[typeid(NiceMock<HearingStimulusMock>).name()] = threshold;
-	sensorySystem->Update(0.16, memory, sensorThresholdsMap);
+	sensorySystem->Update(0.16f, memory, sensorThresholdsMap);
 	
 	ASSERT_FALSE(memory.IsEmpty());
 }
@@ -198,7 +198,7 @@ TEST(NAI_SensorySystem, When_Update_And_StimulusIntoTheThreshold_Then_TheListOfS
 	const auto threshold = std::make_shared<NiceMock<HearingThresholdMock>>(true);
 	std::map<std::string, std::shared_ptr<IThreshold>> sensorThresholdsMap;
 	sensorThresholdsMap[typeid(NiceMock<HearingStimulusMock>).name()] = threshold;
-	sensorySystem->Update(0.16, memory, sensorThresholdsMap);
+	sensorySystem->Update(0.16f, memory, sensorThresholdsMap);
 	
 	ASSERT_TRUE(sensorySystem->GetReceivedStimulus().empty());
 }

@@ -55,6 +55,20 @@ public:
     unsigned int mAmount;
 };
 
+class ChickenStimulus : public VisionStimulus
+{
+public:
+    ChickenStimulus(const glm::vec3& position): mPosition {position} {}
+    
+    virtual ~ChickenStimulus() = default;
+    
+    std::string GetClassName() const override { return typeid(ChickenStimulus).name(); }
+    glm::vec3 GetPosition() const override { return mPosition; }
+    
+public:
+    glm::vec3 mPosition;
+};
+
 class VisionThreshold : public IThreshold
 {
 public:
@@ -76,6 +90,11 @@ public:
     void NotifyFood(const glm::vec3& position, unsigned int amount)
     {
         NotifyAll(std::make_shared<FoodStimulus>(position, amount));
+    }
+    
+    void NotifyChicken(const glm::vec3& position)
+    {
+        NotifyAll(std::make_shared<ChickenStimulus>(position));
     }
 };
 
@@ -149,6 +168,8 @@ public:
         
     }
     
+    virtual ~EatGoal() = default;
+    
     void DoCreate(const std::shared_ptr<IAgent>& agent) override
     {
         mChicken = std::static_pointer_cast<Chicken>(agent);
@@ -168,21 +189,87 @@ public:
         Utils::RemovePredicateWith(predicates, "FOOD");
     }
 
+    std::shared_ptr<IPredicate> DoTransformStimulusIntoPredicates(const Memory<IStimulus>& memory) const override
+    {
+        std::vector<std::shared_ptr<FoodStimulus>> foodStimulusList;
+        std::vector<std::shared_ptr<ChickenStimulus>> chickenStimulusList;
+        
+        memory.PerformActionForEach(
+            [&foodStimulusList, &chickenStimulusList](std::shared_ptr<IStimulus> stimulus) -> bool
+            {
+                if(stimulus->GetClassName() == typeid(FoodStimulus).name())
+                {
+                    const auto foodStimulus = std::static_pointer_cast<FoodStimulus>(stimulus);
+                    foodStimulusList.push_back(foodStimulus);
+                    
+                    return true;
+                }
+                if(stimulus->GetClassName() == typeid(ChickenStimulus).name())
+                {
+                    const auto chickenStimulus = std::static_pointer_cast<ChickenStimulus>(stimulus);
+                    chickenStimulusList.push_back(chickenStimulus);
+                    
+                    return true;
+                }
+                return false;
+            });
 
+        if(foodStimulusList.empty())
+        {
+            return nullptr;
+        }
+        
+        std::sort(foodStimulusList.begin(), foodStimulusList.end(),
+            [this](const std::shared_ptr<FoodStimulus>& a, const std::shared_ptr<FoodStimulus>& b)->bool
+            {
+                return glm::distance(a->GetPosition(), mChicken->GetPosition()) < glm::distance(b->GetPosition(), mChicken->GetPosition());
+            });
+        
+        float minDistance = std::numeric_limits<float>::max();
+        std::shared_ptr<FoodStimulus> nearFood = nullptr;
+            
+        for(auto chicken : chickenStimulusList)
+        {
+            for(auto food : foodStimulusList)
+            {
+                auto distance = glm::distance(food->GetPosition(), chicken->GetPosition());
+                if(distance < minDistance)
+                {
+                    nearFood = food;
+                    minDistance = distance;
+                }
+            }
+        }
+        if(nearFood == nullptr && !foodStimulusList.empty())
+        {
+            nearFood = foodStimulusList[0];
+        }
+       
+        return std::make_shared<FoodPredicate>(nearFood->GetPosition(), nearFood->GetAmount());        
+    }
+
+public:
     unsigned GetCost(std::vector<std::shared_ptr<IPredicate>>& inputPredicates) const override
     {
         //We know there is always only one predicate into the list.
+        if(!mChicken->HasHungry())
+        {
+            return std::numeric_limits<unsigned>::max();
+        }
+        
         const auto foodPredicate = std::static_pointer_cast<FoodPredicate>(inputPredicates[0]);
         return static_cast<unsigned int>(glm::distance(mChicken->GetPosition(), foodPredicate->GetPosition()));
     }
-    
-    virtual ~EatGoal() = default;
 
 private:
     std::shared_ptr<Chicken> mChicken;
 };
 
-
+std::shared_ptr<EatGoal> CreateEatGoal()
+{
+    auto eatGoal = std::make_shared<EatGoal>();
+    return eatGoal;
+}
 
 TEST(Chiken, When_ChickenAlive_Then_NoPredicates) 
 {
@@ -198,15 +285,8 @@ TEST(Chiken, When_ChickenHasFoodNear_Then_Eat)
     visionSensor.Subscribe(sensorySystem);
 
     const auto perceptionSystem = std::make_shared<PerceptionSystem>(sensorySystem);
-    auto eatGoal = std::make_shared<EatGoal>();
-    
-    eatGoal->AddStimulusAcceptance(
-        typeid(FoodStimulus).name(),
-        [](std::shared_ptr<IStimulus> stimulus)
-        {
-            return std::make_shared<FoodPredicate>(stimulus->GetPosition(), 1);
-        });
-
+   
+    const auto eatGoal = CreateEatGoal();
     const std::vector<std::shared_ptr<IGoal>> goals = { eatGoal };
 
     auto chicken = std::make_shared<Chicken>(goals, perceptionSystem, 1);
@@ -231,16 +311,7 @@ TEST(Chiken, When_ChickenHasMoreThanOneFoodNear_Then_EatTheNearerFood)
     visionSensor.Subscribe(sensorySystem);
 
     const auto perceptionSystem = std::make_shared<PerceptionSystem>(sensorySystem);
-    auto eatGoal = std::make_shared<EatGoal>();
-    
-    eatGoal->AddStimulusAcceptance(
-        typeid(FoodStimulus).name(),
-        [](std::shared_ptr<IStimulus> stimulus)
-        {
-            auto foodStimulus = std::static_pointer_cast<FoodStimulus>(stimulus);
-            return std::make_shared<FoodPredicate>(foodStimulus->GetPosition(), foodStimulus->GetAmount());
-        });
-
+    const auto eatGoal = CreateEatGoal();
     const std::vector<std::shared_ptr<IGoal>> goals = { eatGoal };
 
     auto chicken = std::make_shared<Chicken>(goals, perceptionSystem, 3);
@@ -259,3 +330,35 @@ TEST(Chiken, When_ChickenHasMoreThanOneFoodNear_Then_EatTheNearerFood)
 
     ASSERT_FALSE(chicken->HasHungry());
 }
+
+TEST(Chiken, When_ChickenHasMoreThanOneFoodNear_Then_EatFoodNearerOtherChicken) 
+{
+    auto sensorySystem = std::make_shared<SensorySystem<IStimulus>>();
+    ChickenVisionSensor visionSensor;
+    visionSensor.Subscribe(sensorySystem);
+
+    const auto perceptionSystem = std::make_shared<PerceptionSystem>(sensorySystem);
+    
+    const auto eatGoal = CreateEatGoal();
+    const std::vector<std::shared_ptr<IGoal>> goals = { eatGoal };
+
+    auto chicken = std::make_shared<Chicken>(goals, perceptionSystem, 3);
+    chicken->AddSensoryThreshold(typeid(FoodStimulus).name(), std::make_shared<VisionThreshold>());
+    chicken->AddSensoryThreshold(typeid(ChickenStimulus).name(), std::make_shared<VisionThreshold>());
+
+    //Notify more than one food one nearer other chicken
+    visionSensor.NotifyFood(glm::vec3(0.0f, 0.0, 0.0f), 5);
+    visionSensor.NotifyFood(glm::vec3(1.0f, 0.0, 1.0f), 5);
+    visionSensor.NotifyFood(glm::vec3(1.0f, 0.0f, -1.0f), 5);
+    visionSensor.NotifyChicken(glm::vec3(1.0, 0.0, 1.5f));
+
+    ASSERT_TRUE(chicken->HasHungry());
+    
+    chicken->StartUp();
+    chicken->Update(0.16f); //setting current state
+    chicken->Update(0.16f);
+    chicken->Update(0.16f);
+
+    ASSERT_FALSE(chicken->HasHungry());
+}
+

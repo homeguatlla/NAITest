@@ -186,21 +186,31 @@ class GoalAcceptanceHearingStimulusMock : public BaseGoal
 public:
 	GoalAcceptanceHearingStimulusMock()
 	{
-		ON_CALL(*this, IsStimulusAccepted).WillByDefault(
-            [this](std::shared_ptr<IStimulus> stimulus)
-            {
-                return true;
-            });
 		ON_CALL(*this, TransformStimulusIntoPredicates).WillByDefault(
-            [this](std::shared_ptr<IStimulus> stimulus)
+            [this](const Memory<IStimulus>& memory)
             {
                 return std::make_shared<BasePredicate>("PredicateA");
             });
 	}
 	virtual ~GoalAcceptanceHearingStimulusMock() = default;
 
-	MOCK_CONST_METHOD1(IsStimulusAccepted, bool(std::shared_ptr<IStimulus>));
-	MOCK_CONST_METHOD1(TransformStimulusIntoPredicates, std::shared_ptr<IPredicate>(std::shared_ptr<IStimulus>));
+	MOCK_CONST_METHOD1(TransformStimulusIntoPredicates, std::shared_ptr<IPredicate>(const Memory<IStimulus>&));
+};
+
+class GoalDoNotAcceptanceHearingStimulusMock : public BaseGoal
+{
+public:
+	GoalDoNotAcceptanceHearingStimulusMock()
+	{
+		ON_CALL(*this, TransformStimulusIntoPredicates).WillByDefault(
+            [this](const Memory<IStimulus>& memory)
+            {
+                return nullptr;
+            });
+	}
+	virtual ~GoalDoNotAcceptanceHearingStimulusMock() = default;
+
+	MOCK_CONST_METHOD1(TransformStimulusIntoPredicates, std::shared_ptr<IPredicate>(const Memory<IStimulus>&));
 };
 
 class HearingStimulusMock : public IStimulus
@@ -342,9 +352,8 @@ TEST(NAI_Agent, When_TransformAnStimulusToPredicatesRelatedToAGoal_Then_NewPredi
 														.WithGoal(std::make_shared<NiceMock<GoalAcceptanceHearingStimulusMock>>())
 														.Build<AgentMock>();
 	
-	const auto stimulus = std::make_shared<HearingStimulusMock>();
-	
-	const auto newPredicatesList = agent->TransformStimulusIntoPredicates(stimulus);
+	const Memory<IStimulus> memory;
+	const auto newPredicatesList = agent->TransformStimulusIntoPredicates(memory);
 	
 	ASSERT_FALSE(newPredicatesList.empty());
 }
@@ -355,10 +364,11 @@ TEST(NAI_Agent, When_TransformAnStimulusToPredicatesUnRelatedToAGoal_Then_Null)
 	
 	AgentBuilder agentBuilder;
 	const auto agent =	agentBuilder.WithGoapPlanner(goapPlannerMock)
+														.WithGoal(std::make_shared<NiceMock<GoalDoNotAcceptanceHearingStimulusMock>>())
 														.Build<AgentMock>();
 	
-	const auto stimulus = std::make_shared<HearingStimulusMock>();
-	const auto isAccepted = agent->IsStimulusAccepted(stimulus);
+	const Memory<IStimulus> memory;
+	const auto newPredicatesList = agent->TransformStimulusIntoPredicates(memory);
 	
-	ASSERT_FALSE(isAccepted);
+	ASSERT_TRUE(newPredicatesList.empty());
 }
