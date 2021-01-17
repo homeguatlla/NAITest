@@ -33,7 +33,7 @@ public:
 	mHasReceivedNewPredicate { false }
 	{
 		ON_CALL(*this, TransformStimulusIntoPredicates).WillByDefault(
-            [this](const Memory<IStimulus>& memory)
+            [this](const ShortTermMemory<IStimulus>& memory)
             {
             	std::vector<std::shared_ptr<IPredicate>> result;
             	result.push_back(std::make_shared<PlaceIamPredicate>("AtHome"));
@@ -54,13 +54,13 @@ public:
 	void MoveTo(float elapsedTime, const glm::vec3& point) {}
 
 	MOCK_METHOD1(OnNewPredicate, void(std::shared_ptr<IPredicate>));
-	MOCK_CONST_METHOD1(TransformStimulusIntoPredicates, const std::vector<std::shared_ptr<IPredicate>>(const Memory<IStimulus>&));
+	MOCK_CONST_METHOD1(TransformStimulusIntoPredicates, const std::vector<std::shared_ptr<IPredicate>>(const ShortTermMemory<IStimulus>&));
 
 private:
 	bool mHasReceivedNewPredicate;
 };
 
-class MemoryMock : public Memory<IStimulus>
+class MemoryMock : public ShortTermMemory<IStimulus>
 {
 public:
 	MemoryMock() = default;
@@ -75,13 +75,15 @@ public:
 
 	MOCK_CONST_METHOD0(GetClassName, std::string());
 	MOCK_CONST_METHOD0(GetPosition, glm::vec3());
+	MOCK_CONST_METHOD0(GetDurationInMemory, float());
+	MOCK_CONST_METHOD0(GetId, unsigned int());
 };
 
 TEST(NAI_CognitiveSystem, When_Update_AndMemoryNotEmpty_AndGoalsAcceptingStimulus_Then_NewPredicatesAreNotifiedToAgent)
 {
 	CognitiveSystem cognitiveSystem;
 	MemoryMock memory;
-	memory.Add(std::make_shared<NiceMock<StimulusCognitiveMock>>());
+	memory.Add(std::make_shared<NiceMock<StimulusCognitiveMock>>(), 0.0f);
 	
 	const auto goapPlanner = std::make_shared<TreeGoapPlanner>();
 	

@@ -187,14 +187,14 @@ public:
 	GoalAcceptanceHearingStimulusMock()
 	{
 		ON_CALL(*this, TransformStimulusIntoPredicates).WillByDefault(
-            [this](const Memory<IStimulus>& memory)
+            [this](const ShortTermMemory<IStimulus>& memory)
             {
                 return std::make_shared<BasePredicate>("PredicateA");
             });
 	}
 	virtual ~GoalAcceptanceHearingStimulusMock() = default;
 
-	MOCK_CONST_METHOD1(TransformStimulusIntoPredicates, std::shared_ptr<IPredicate>(const Memory<IStimulus>&));
+	MOCK_CONST_METHOD1(TransformStimulusIntoPredicates, std::shared_ptr<IPredicate>(const ShortTermMemory<IStimulus>&));
 };
 
 class GoalDoNotAcceptanceHearingStimulusMock : public BaseGoal
@@ -203,14 +203,14 @@ public:
 	GoalDoNotAcceptanceHearingStimulusMock()
 	{
 		ON_CALL(*this, TransformStimulusIntoPredicates).WillByDefault(
-            [this](const Memory<IStimulus>& memory)
+            [this](const ShortTermMemory<IStimulus>& memory)
             {
                 return nullptr;
             });
 	}
 	virtual ~GoalDoNotAcceptanceHearingStimulusMock() = default;
 
-	MOCK_CONST_METHOD1(TransformStimulusIntoPredicates, std::shared_ptr<IPredicate>(const Memory<IStimulus>&));
+	MOCK_CONST_METHOD1(TransformStimulusIntoPredicates, std::shared_ptr<IPredicate>(const ShortTermMemory<IStimulus>&));
 };
 
 class HearingStimulusMock : public IStimulus
@@ -352,7 +352,7 @@ TEST(NAI_Agent, When_TransformAnStimulusToPredicatesRelatedToAGoal_Then_NewPredi
 														.WithGoal(std::make_shared<NiceMock<GoalAcceptanceHearingStimulusMock>>())
 														.Build<AgentMock>();
 	
-	const Memory<IStimulus> memory;
+	const ShortTermMemory<IStimulus> memory;
 	const auto newPredicatesList = agent->TransformStimulusIntoPredicates(memory);
 	
 	ASSERT_FALSE(newPredicatesList.empty());
@@ -367,8 +367,12 @@ TEST(NAI_Agent, When_TransformAnStimulusToPredicatesUnRelatedToAGoal_Then_Null)
 														.WithGoal(std::make_shared<NiceMock<GoalDoNotAcceptanceHearingStimulusMock>>())
 														.Build<AgentMock>();
 	
-	const Memory<IStimulus> memory;
+	const ShortTermMemory<IStimulus> memory;
 	const auto newPredicatesList = agent->TransformStimulusIntoPredicates(memory);
 	
 	ASSERT_TRUE(newPredicatesList.empty());
+}
+
+TEST(NAI_Agent, When_Update_Then_InstantPredicatesAreRemoved)
+{
 }

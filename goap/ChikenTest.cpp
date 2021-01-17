@@ -42,31 +42,37 @@ public:
 class FoodStimulus : public VisionStimulus
 {
 public:
-    FoodStimulus(const glm::vec3& position, unsigned int amount): mPosition {position}, mAmount{amount} {}
+    FoodStimulus(unsigned int id, const glm::vec3& position, unsigned int amount):
+        mPosition {position}, mAmount{amount}, mId { id} {}
     
     virtual ~FoodStimulus() = default;
     
     std::string GetClassName() const override { return typeid(FoodStimulus).name(); }
     glm::vec3 GetPosition() const override { return mPosition; }
     unsigned int GetAmount() const { return mAmount; }
-    
+    float GetDurationInMemory() const override { return 0.0f; }
+    unsigned int GetId() const override { return mId; }
 public:
     glm::vec3 mPosition;
     unsigned int mAmount;
+    unsigned int mId;
 };
 
 class ChickenStimulus : public VisionStimulus
 {
 public:
-    ChickenStimulus(const glm::vec3& position): mPosition {position} {}
+    ChickenStimulus(unsigned int id, const glm::vec3& position): mPosition {position}, mId{id} {}
     
     virtual ~ChickenStimulus() = default;
     
     std::string GetClassName() const override { return typeid(ChickenStimulus).name(); }
     glm::vec3 GetPosition() const override { return mPosition; }
-    
+    float GetDurationInMemory() const override { return 3.0f; }
+    unsigned int GetId() const override { return mId; }
+
 public:
     glm::vec3 mPosition;
+    unsigned int mId;
 };
 
 class VisionThreshold : public IThreshold
@@ -87,14 +93,14 @@ public:
     ChickenVisionSensor() = default;
     virtual ~ChickenVisionSensor() = default;
 
-    void NotifyFood(const glm::vec3& position, unsigned int amount)
+    void NotifyFood(unsigned int id, const glm::vec3& position, unsigned int amount)
     {
-        NotifyAll(std::make_shared<FoodStimulus>(position, amount));
+        NotifyAll(std::make_shared<FoodStimulus>(id, position, amount));
     }
     
-    void NotifyChicken(const glm::vec3& position)
+    void NotifyChicken(unsigned int id, const glm::vec3& position)
     {
-        NotifyAll(std::make_shared<ChickenStimulus>(position));
+        NotifyAll(std::make_shared<ChickenStimulus>(id, position));
     }
 };
 
@@ -189,7 +195,7 @@ public:
         Utils::RemovePredicateWith(predicates, "FOOD");
     }
 
-    std::shared_ptr<IPredicate> DoTransformStimulusIntoPredicates(const Memory<IStimulus>& memory) const override
+    std::shared_ptr<IPredicate> DoTransformStimulusIntoPredicates(const ShortTermMemory<IStimulus>& memory) const override
     {
         std::vector<std::shared_ptr<FoodStimulus>> foodStimulusList;
         std::vector<std::shared_ptr<ChickenStimulus>> chickenStimulusList;
@@ -292,7 +298,7 @@ TEST(Chiken, When_ChickenHasFoodNear_Then_Eat)
     auto chicken = std::make_shared<Chicken>(goals, perceptionSystem, 1);
     chicken->AddSensoryThreshold(typeid(FoodStimulus).name(), std::make_shared<VisionThreshold>());
 
-    visionSensor.NotifyFood(glm::vec3(0.0f), 1);
+    visionSensor.NotifyFood(0, glm::vec3(0.0f), 1);
 
     ASSERT_TRUE(chicken->HasHungry());
     
@@ -318,8 +324,8 @@ TEST(Chiken, When_ChickenHasMoreThanOneFoodNear_Then_EatTheNearerFood)
     chicken->AddSensoryThreshold(typeid(FoodStimulus).name(), std::make_shared<VisionThreshold>());
 
     //Notify more than one food.
-    visionSensor.NotifyFood(glm::vec3(1.0f, 0.0, 0.0f), 1);
-    visionSensor.NotifyFood(glm::vec3(0.0f), 4);
+    visionSensor.NotifyFood(0, glm::vec3(1.0f, 0.0, 0.0f), 1);
+    visionSensor.NotifyFood(1, glm::vec3(0.0f), 4);
 
     ASSERT_TRUE(chicken->HasHungry());
     
@@ -347,10 +353,10 @@ TEST(Chiken, When_ChickenHasMoreThanOneFoodNear_Then_EatFoodNearerOtherChicken)
     chicken->AddSensoryThreshold(typeid(ChickenStimulus).name(), std::make_shared<VisionThreshold>());
 
     //Notify more than one food one nearer other chicken
-    visionSensor.NotifyFood(glm::vec3(0.0f, 0.0, 0.0f), 5);
-    visionSensor.NotifyFood(glm::vec3(1.0f, 0.0, 1.0f), 5);
-    visionSensor.NotifyFood(glm::vec3(1.0f, 0.0f, -1.0f), 5);
-    visionSensor.NotifyChicken(glm::vec3(1.0, 0.0, 1.5f));
+    visionSensor.NotifyFood(0, glm::vec3(0.0f, 0.0, 0.0f), 5);
+    visionSensor.NotifyFood(1, glm::vec3(1.0f, 0.0, 1.0f), 5);
+    visionSensor.NotifyFood(2, glm::vec3(1.0f, 0.0f, -1.0f), 5);
+    visionSensor.NotifyChicken(3, glm::vec3(1.0, 0.0, 1.5f));
 
     ASSERT_TRUE(chicken->HasHungry());
     

@@ -29,6 +29,8 @@ public:
 
 	MOCK_CONST_METHOD0(GetClassName, std::string());
 	MOCK_CONST_METHOD0(GetPosition, glm::vec3());
+	MOCK_CONST_METHOD0(GetDurationInMemory, float());
+	MOCK_CONST_METHOD0(GetId, unsigned int());
 };
 
 class VisualStimulusMock : public IStimulus
@@ -47,6 +49,8 @@ public:
 
 	MOCK_CONST_METHOD0(GetClassName, std::string());
 	MOCK_CONST_METHOD0(GetPosition, glm::vec3());
+	MOCK_CONST_METHOD0(GetDurationInMemory, float());
+	MOCK_CONST_METHOD0(GetId, unsigned int());
 };
 
 class HearingSensorMock
@@ -167,7 +171,7 @@ TEST(NAI_SensorySystem, When_Update_And_StimulusIntoTheThreshold_Then_TheMemoryI
 {
 	HearingSensorMock hearingSensorMock;
 	const auto sensorySystem = std::make_shared<SensorySystem<IStimulus>>();
-	Memory<IStimulus> memory;
+	ShortTermMemory<IStimulus> memory;
 	
 	EXPECT_CALL(hearingSensorMock, Subscribe).Times(1);
 	EXPECT_CALL(hearingSensorMock, Update).Times(1);
@@ -187,7 +191,7 @@ TEST(NAI_SensorySystem, When_Update_And_StimulusIntoTheThreshold_Then_TheListOfS
 {
 	HearingSensorMock hearingSensorMock;
 	const auto sensorySystem = std::make_shared<SensorySystem<IStimulus>>();
-	Memory<IStimulus> memory;
+	ShortTermMemory<IStimulus> memory;
 	
 	EXPECT_CALL(hearingSensorMock, Subscribe).Times(1);
 	EXPECT_CALL(hearingSensorMock, Update).Times(1);
@@ -207,7 +211,7 @@ TEST(NAI_SensorySystem, When_Update_And_StimulusOutsideTheThreshold_Then_TheMemo
 {
 	HearingSensorMock hearingSensorMock;
 	const auto sensorySystem = std::make_shared<SensorySystem<IStimulus>>();
-	Memory<IStimulus> memory;
+	ShortTermMemory<IStimulus> memory;
 
 	EXPECT_CALL(hearingSensorMock, Subscribe).Times(1);
 	EXPECT_CALL(hearingSensorMock, Update).Times(1);
@@ -226,7 +230,7 @@ TEST(NAI_SensorySystem, When_Update_And_StimulusOfSensorA_And_StimulusOfSensorB_
 {
 	HearingSensorMock hearingSensorMock;
 	VisualSensorMock visualSensorMock;
-	Memory<IStimulus> memory;
+	ShortTermMemory<IStimulus> memory;
 	
 	const auto sensorySystem = std::make_shared<SensorySystem<IStimulus>>();
 

@@ -33,7 +33,7 @@ public:
 		BaseAgent(planner, goals, predicates, perceptionSystem)
 	{
 		ON_CALL(*this, TransformStimulusIntoPredicates).WillByDefault(
-            [this](const Memory<IStimulus>& memory)
+            [this](const ShortTermMemory<IStimulus>& memory)
             {
             	std::vector<std::shared_ptr<IPredicate>> result;
             	result.push_back(std::make_shared<PlaceIamPredicate>("AtHome"));
@@ -47,7 +47,7 @@ public:
 	glm::vec3 GetPosition() const { return {}; }
 	void MoveTo(float elapsedTime, const glm::vec3& point) {}
 
-	MOCK_CONST_METHOD1(TransformStimulusIntoPredicates, const std::vector<std::shared_ptr<IPredicate>>(const Memory<IStimulus>&));
+	MOCK_CONST_METHOD1(TransformStimulusIntoPredicates, const std::vector<std::shared_ptr<IPredicate>>(const ShortTermMemory<IStimulus>&));
 };
 
 class SensoryMock : public SensorySystem<IStimulus>
@@ -66,6 +66,8 @@ public:
 
 	MOCK_CONST_METHOD0(GetClassName, std::string());
 	MOCK_CONST_METHOD0(GetPosition, glm::vec3());
+	MOCK_CONST_METHOD0(GetDurationInMemory, float());
+	MOCK_CONST_METHOD0(GetId, unsigned int());
 };
 
 class ThresholdMock : public IThreshold
