@@ -16,7 +16,7 @@ using  namespace NAI::Goap;
 class FoodPredicate : public BasePredicate
 {
 public:
-    FoodPredicate() : BasePredicate("FOOD") {};
+    FoodPredicate() : BasePredicate("FOOD"), mPosition{0.0f}, mAmount{0} {};
 
     FoodPredicate(const glm::vec3& position, unsigned int amount) : BasePredicate("FOOD"),
     mPosition{position},
@@ -25,18 +25,45 @@ public:
     virtual ~FoodPredicate() = default;
 
     glm::vec3 GetPosition() const { return mPosition; }
+    void SetPosition(const glm::vec3& position) { mPosition = position; }
     unsigned int GetAmount() const { return mAmount; }
+    void SetAmount(unsigned int amount) { mAmount = amount; }
 
 private:
     glm::vec3 mPosition;
     unsigned int mAmount;
 };
 
+class EscapePredicate : public BasePredicate
+{
+public:
+    EscapePredicate() : BasePredicate("ESCAPE"), mEscapePosition(0.0f) {}
+    EscapePredicate(const glm::vec3& escapePosition) : BasePredicate("ESCAPE"), mEscapePosition(escapePosition) {}
+    virtual ~EscapePredicate() = default;
+    
+    glm::vec3 GetEscapePoint() const { return mEscapePosition; }
+    void SetEscapePoint(const glm::vec3& escapePoint) { mEscapePosition = escapePoint; }
+
+private:
+    glm::vec3 mEscapePosition;
+};
+
+std::shared_ptr<EscapePredicate> ESCAPE_PREDICATE = std::make_shared<EscapePredicate>();
+
+std::shared_ptr<FoodPredicate> FOOD_PREDICATE = std::make_shared<FoodPredicate>();
+
 class VisionStimulus : public IStimulus
 {
 public:
     VisionStimulus() = default;
     virtual ~VisionStimulus() = default;
+};
+
+class SoundStimulus : public IStimulus
+{
+public:
+    SoundStimulus() = default;
+    virtual ~SoundStimulus() = default;
 };
 
 class FoodStimulus : public VisionStimulus
@@ -50,7 +77,7 @@ public:
     std::string GetClassName() const override { return typeid(FoodStimulus).name(); }
     glm::vec3 GetPosition() const override { return mPosition; }
     unsigned int GetAmount() const { return mAmount; }
-    float GetDurationInMemory() const override { return 0.0f; }
+    float GetDurationInMemory() const override { return 3.0f; }
     unsigned int GetId() const override { return mId; }
 public:
     glm::vec3 mPosition;
@@ -75,11 +102,40 @@ public:
     unsigned int mId;
 };
 
+class DangerNoiseStimulus : public SoundStimulus
+{
+public:
+    DangerNoiseStimulus(unsigned int id, const glm::vec3& position): mPosition {position}, mId{id} {}
+    
+    virtual ~DangerNoiseStimulus() = default;
+    
+    std::string GetClassName() const override { return typeid(DangerNoiseStimulus).name(); }
+    glm::vec3 GetPosition() const override { return mPosition; }
+    float GetDurationInMemory() const override { return 3.0f; }
+    unsigned int GetId() const override { return mId; }
+
+public:
+    glm::vec3 mPosition;
+    unsigned int mId;
+};
+
 class VisionThreshold : public IThreshold
 {
 public:
     VisionThreshold() = default;
     virtual ~VisionThreshold() = default;
+
+    bool IsStimulusPerceived(std::shared_ptr<IStimulus> stimulus) const override
+    {
+        return true;
+    }
+};
+
+class SoundThreshold : public IThreshold
+{
+public:
+    SoundThreshold() = default;
+    virtual ~SoundThreshold() = default;
 
     bool IsStimulusPerceived(std::shared_ptr<IStimulus> stimulus) const override
     {
@@ -104,18 +160,29 @@ public:
     }
 };
 
+class ChickenListeningSensor : public BaseSensor
+{
+public:
+    ChickenListeningSensor() = default;
+    virtual ~ChickenListeningSensor() = default;
+
+    void NotifyDanger(unsigned int id, const glm::vec3& position)
+    {
+        NotifyAll(std::make_shared<DangerNoiseStimulus>(id, position));
+    }
+};
+
 class Chicken : public BaseAgent
 {
 public:
     Chicken(const std::vector<std::shared_ptr<IGoal>>& goals,
             const std::shared_ptr<PerceptionSystem> perceptionSystem, unsigned int hungry) :
         BaseAgent(std::make_shared<NiceMock<TreeGoapPlanner>>(), goals, {}, perceptionSystem),
-        mHungry(hungry)
-    {
-        
+        mHungry(hungry), mIsSave(true)
+    {        
     }
+    
     virtual ~Chicken() = default;
-
 
     glm::vec3 GetPosition() const override { return mPosition; }
     void MoveTo(float elapsedTime, const glm::vec3& point) override {}
@@ -126,12 +193,21 @@ public:
         mHungry = std::max(0, mHungry);
         std::cout << "Eating " << amount << " of food..." << std::endl;
     }
+
+    void EscapeFrom(const glm::vec3& position)
+    {
+        std::cout << "Escaping from (" << position.x << ", " << position.y << ", " << position.z << ") " << std::endl;
+        mIsSave = true;
+    }
     
     bool HasHungry() const { return mHungry > 0; }
+    bool IsSave() const { return mIsSave; }
+    void SetInDanger() { mIsSave = false; }
 
 private:
     glm::vec3 mPosition;
     int mHungry;
+    bool mIsSave;
 };
 
 class EatAction : public BaseAction
@@ -250,8 +326,11 @@ public:
         {
             nearFood = foodStimulusList[0];
         }
-       
-        return std::make_shared<FoodPredicate>(nearFood->GetPosition(), nearFood->GetAmount());        
+
+        FOOD_PREDICATE->SetPosition(nearFood->GetPosition());
+        FOOD_PREDICATE->SetAmount(nearFood->GetAmount());
+
+        return FOOD_PREDICATE;
     }
 
 public:
@@ -271,10 +350,126 @@ private:
     std::shared_ptr<Chicken> mChicken;
 };
 
+class EscapeAction : public BaseAction
+{
+public:
+    EscapeAction(
+        const std::vector<std::shared_ptr<IPredicate>>& preConditions,
+        const std::vector<std::shared_ptr<IPredicate>>& postConditions,
+        const std::weak_ptr<Chicken>& agent) :
+        BaseAction(preConditions, postConditions),
+        mAgent{agent}
+    {
+        mHasAccomplished = false;
+    }
+    
+    virtual ~EscapeAction() = default;
+
+    void Process(float elapsedTime) override
+    {
+        if (auto agent = mAgent.lock())
+        {
+            if(!agent->IsSave())
+            {
+                const auto predicateMatch = GetPredicateMatchedPreconditionWithIndex(0);
+                const auto escapePredicate = std::static_pointer_cast<EscapePredicate>(predicateMatch);
+                agent->EscapeFrom(escapePredicate->GetEscapePoint());
+                mHasAccomplished = true;
+            }
+        }
+    }
+private:
+    std::weak_ptr<Chicken> mAgent;
+};
+
+class EscapeGoal : public BaseGoal
+{
+public:
+    EscapeGoal()
+    {
+        
+    }
+    
+    virtual ~EscapeGoal() = default;
+    
+    void DoCreate(const std::shared_ptr<IAgent>& agent) override
+    {
+        mChicken = std::static_pointer_cast<Chicken>(agent);
+        Reset();
+    }
+
+    void DoReset() override
+    {
+        std::vector<std::shared_ptr<IPredicate>> preConditions = {std::make_shared<EscapePredicate>()};
+        std::vector<std::shared_ptr<IPredicate>> postConditions;
+        const auto dangerAction = std::make_shared<EscapeAction>(preConditions, postConditions, mChicken);
+        mActions.push_back(dangerAction);
+    }
+
+    void DoAccomplished(std::vector<std::shared_ptr<IPredicate>>& predicates) override
+    {
+        Utils::RemovePredicateWith(predicates, "DANGER");
+    }
+
+    std::shared_ptr<IPredicate> DoTransformStimulusIntoPredicates(const ShortTermMemory<IStimulus>& memory) const override
+    {
+        std::vector<std::shared_ptr<DangerNoiseStimulus>> dangerStimulusList;
+        
+        memory.PerformActionForEach(
+            [&dangerStimulusList](std::shared_ptr<IStimulus> stimulus) -> bool
+            {
+                if(stimulus->GetClassName() == typeid(DangerNoiseStimulus).name())
+                {
+                    const auto dangerStimulus = std::static_pointer_cast<DangerNoiseStimulus>(stimulus);
+                    dangerStimulusList.push_back(dangerStimulus);
+                    
+                    return true;
+                }
+                return false;
+            });
+
+        if(dangerStimulusList.empty())
+        {
+            return nullptr;
+        }
+        
+        glm::vec3 directionToEscape(0.0f);
+        
+        for(auto danger : dangerStimulusList)
+        {
+           directionToEscape += danger->GetPosition();
+        }
+        mChicken->SetInDanger();
+        //This predicate is unique
+        ESCAPE_PREDICATE->SetEscapePoint(directionToEscape);
+        return ESCAPE_PREDICATE;
+    }
+
+public:
+    unsigned GetCost(std::vector<std::shared_ptr<IPredicate>>& inputPredicates) const override
+    {
+        //We know there is always only one predicate into the list.
+        if(mChicken->IsSave())
+        {
+            return std::numeric_limits<unsigned>::max();
+        }
+        
+        const auto escapePredicate = std::static_pointer_cast<EscapePredicate>(inputPredicates[0]);
+        return 1;
+    }
+
+private:
+    std::shared_ptr<Chicken> mChicken;
+};
+
 std::shared_ptr<EatGoal> CreateEatGoal()
 {
-    auto eatGoal = std::make_shared<EatGoal>();
-    return eatGoal;
+    return std::make_shared<EatGoal>();
+}
+
+std::shared_ptr<EscapeGoal> CreateEscapeGoal()
+{
+    return std::make_shared<EscapeGoal>();
 }
 
 TEST(Chiken, When_ChickenAlive_Then_NoPredicates) 
@@ -301,6 +496,12 @@ TEST(Chiken, When_ChickenHasFoodNear_Then_Eat)
     visionSensor.NotifyFood(0, glm::vec3(0.0f), 1);
 
     ASSERT_TRUE(chicken->HasHungry());
+
+    //TODO este test falla porque se está agregando un predicado de comida a cada frame y entonces
+    //llega como una nueva notificación al agente y pasa de Plan -> Process -> new predicate -> Plan
+    //no dejando procesar. El predicado que se crea de comida tiene que ser siempre el mismo para el mismo estímulo
+    //de alguna manera tenemos que poder asociar un estimulo nuevo a un mismo elemento de memoria y por tanto un mismo
+    //predicado. MMM... no sé ahora como.
     
     chicken->StartUp();
     chicken->Update(0.16f); //setting current state
@@ -368,3 +569,32 @@ TEST(Chiken, When_ChickenHasMoreThanOneFoodNear_Then_EatFoodNearerOtherChicken)
     ASSERT_FALSE(chicken->HasHungry());
 }
 
+TEST(Chiken, When_ChickenHearsSomeNoise_Then_Escapes) 
+{
+    const auto sensorySystem = std::make_shared<SensorySystem<IStimulus>>();
+    ChickenListeningSensor listeningSensor;
+    listeningSensor.Subscribe(sensorySystem);
+
+    const auto perceptionSystem = std::make_shared<PerceptionSystem>(sensorySystem);
+    
+    const auto escapeGoal = CreateEscapeGoal();
+    const std::vector<std::shared_ptr<IGoal>> goals = { escapeGoal };
+
+    auto chicken = std::make_shared<Chicken>(goals, perceptionSystem, 3);
+    chicken->AddSensoryThreshold(typeid(DangerNoiseStimulus).name(), std::make_shared<SoundThreshold>());
+
+    listeningSensor.NotifyDanger(1, glm::vec3(1.0f, 0.0f, 0.0f));
+    
+    chicken->StartUp();
+    chicken->Update(0.16f); //setting current state
+    
+    chicken->Update(0.16f);
+    ASSERT_FALSE(chicken->IsSave());
+
+    chicken->Update(0.16f);
+    ASSERT_TRUE(chicken->IsSave());
+}
+
+TEST(Chiken, When_ChickenHearsMoreThanOneNoise_Then_EscapesFromAllNoises) 
+{
+}
