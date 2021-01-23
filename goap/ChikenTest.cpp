@@ -225,7 +225,7 @@ public:
     
     virtual ~EatAction() = default;
 
-    void Process(float elapsedTime) override
+    void DoProcess(float elapsedTime) override
     {
         if (auto agent = mAgent.lock())
         {
@@ -365,7 +365,7 @@ public:
     
     virtual ~EscapeAction() = default;
 
-    void Process(float elapsedTime) override
+    void DoProcess(float elapsedTime) override
     {
         if (auto agent = mAgent.lock())
         {
