@@ -51,7 +51,7 @@ public:
 			auto predicateA = std::make_shared<BasePredicate>("A");
 			auto predicateB = std::make_shared<BasePredicate>("B");
 
-			std::vector<std::shared_ptr<IPredicate>> preconditions = { predicateA };
+			std::vector<std::string> preconditions = { predicateA->GetText() };
 			std::vector<std::shared_ptr<IPredicate>> postconditions = { predicateB };
 			std::vector<std::shared_ptr<IAction>> actions;
 			actions.push_back(std::make_shared<BaseAction>(preconditions, postconditions));
@@ -67,7 +67,7 @@ public:
 			{
 				auto predicateA = std::make_shared<BasePredicate>("A");
 
-				std::vector<std::shared_ptr<IPredicate>> preconditions = { predicateA };
+				std::vector<std::string> preconditions = { predicateA->GetText() };
 				std::vector<std::shared_ptr<IPredicate>> postconditions = desiredPredicates;
 				std::vector<std::shared_ptr<IAction>> actions;
 				actions.push_back(std::make_shared<BaseAction>(preconditions, postconditions));
@@ -103,12 +103,12 @@ public:
 		ON_CALL(*this, GetPlan).WillByDefault(
 			[this](std::vector<std::shared_ptr<IGoal>>& goals, std::vector<std::shared_ptr<IPredicate>>& predicates)
 			{
-				std::vector<std::shared_ptr<IPredicate>> preconditions = { predicateA };
+				std::vector<std::string> preconditions = { predicateA->GetText() };
 				std::vector<std::shared_ptr<IPredicate>> postconditions = { predicateB };
 				std::vector<std::shared_ptr<IAction>> actions;
 				actions.push_back(std::make_shared<BaseAction>(preconditions, postconditions));
 
-				preconditions = { predicateB };
+				preconditions = { predicateB->GetText() };
 				postconditions = { predicateC };
 				actions.push_back(std::make_shared<BaseAction>(preconditions, postconditions));
 
@@ -123,7 +123,7 @@ public:
 			{
 				auto predicateA = std::make_shared<BasePredicate>("A");
 
-				std::vector<std::shared_ptr<IPredicate>> preconditions = { predicateA };
+				std::vector<std::string> preconditions = { predicateA->GetText() };
 				std::vector<std::shared_ptr<IPredicate>> postconditions = desiredPredicates;
 				std::vector<std::shared_ptr<IAction>> actions;
 				actions.push_back(std::make_shared<BaseAction>(preconditions, postconditions));

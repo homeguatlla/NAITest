@@ -11,7 +11,7 @@ using namespace NAI::Goap;
 
 TEST(NAI_Action, When_NoPredicates_Then_CostIsZero) 
 {
-	std::vector<std::shared_ptr<IPredicate>> preconditions;
+	std::vector<std::string> preconditions;
 	std::vector<std::shared_ptr<IPredicate>> postconditions;
 
 	auto action = std::make_shared<BaseAction>(preconditions, postconditions);
@@ -25,7 +25,7 @@ TEST(NAI_Action, When_PredicatesDontSatisfyPreconditions_Then_EmptyList)
 	auto predicateB = std::make_shared<BasePredicate>("B");
 	auto predicateC = std::make_shared<BasePredicate>("C");
 
-	std::vector<std::shared_ptr<IPredicate>> preconditions { predicateA, predicateC };
+	std::vector<std::string> preconditions { predicateA->GetText(), predicateC->GetText() };
 	std::vector<std::shared_ptr<IPredicate>> postconditions { predicateB };
 
 
@@ -44,7 +44,7 @@ TEST(NAI_Action, When_PredicatesSatisfyPreconditions_Then_ListOfPredicates)
 	auto predicateB = std::make_shared<BasePredicate>("B");
 	auto predicateC = std::make_shared<BasePredicate>("C");
 
-	std::vector<std::shared_ptr<IPredicate>> preconditions{ predicateA, predicateC };
+	std::vector<std::string> preconditions{ predicateA->GetText(), predicateC->GetText() };
 	std::vector<std::shared_ptr<IPredicate>> postconditions{ predicateB };
 
 

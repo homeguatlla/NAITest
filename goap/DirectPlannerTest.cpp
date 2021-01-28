@@ -45,7 +45,7 @@ TEST(NAI_DirectGoalPlanner, When_PredicatesAnGoalsButNoSatisfied_Then_NoPlan)
 	auto predicateC = std::make_shared<BasePredicate>("C");
 	predicates.push_back(predicateA);
 
-	std::vector<std::shared_ptr<IPredicate>> preconditions = { predicateB };
+	std::vector<std::string> preconditions = { predicateB->GetText() };
 	std::vector<std::shared_ptr<IPredicate>> postconditions = { predicateC };
 	std::vector<std::shared_ptr<IAction>> actions;
 	actions.push_back(std::make_shared<BaseAction>(preconditions, postconditions));
@@ -69,7 +69,7 @@ TEST(NAI_DirectGoalPlanner, When_OnePredicateMatchesPreconditionOfAnActionOfOneA
 	auto predicateB = std::make_shared<BasePredicate>("B");
 	predicates.push_back(predicateA);
 
-	std::vector<std::shared_ptr<IPredicate>> preconditions = { predicateA };
+	std::vector<std::string> preconditions = { predicateA->GetText() };
 	std::vector<std::shared_ptr<IPredicate>> postconditions = { predicateB };
 	actions.push_back(std::make_shared<BaseAction>(preconditions, postconditions));
 
@@ -95,11 +95,11 @@ TEST(NAI_DirectGoalPlanner, When_OnePredicateChainsOneActionAndThatActionAnother
 
 	predicates.push_back(predicateA);
 
-	std::vector<std::shared_ptr<IPredicate>> preconditions = { predicateB };
+	std::vector<std::string> preconditions = { predicateB->GetText() };
 	std::vector<std::shared_ptr<IPredicate>> postconditions = { predicateC };
 	actions.push_back(std::make_shared<BaseAction>(preconditions, postconditions));
 	
-	preconditions = { predicateA };
+	preconditions = { predicateA->GetText() };
 	postconditions = { predicateB };
 	actions.push_back(std::make_shared<BaseAction>(preconditions, postconditions));
 
@@ -127,14 +127,14 @@ TEST(NAI_DirectGoalPlanner, When_TwoGoalsAreSatisfied_Then_LessCostGoalPlan)
 	std::vector<std::shared_ptr<IGoal>> goals;
 
 	std::vector<std::shared_ptr<IAction>> actions;
-	std::vector<std::shared_ptr<IPredicate>> preconditions = { predicateB };
+	std::vector<std::string> preconditions = { predicateB->GetText() };
 	std::vector<std::shared_ptr<IPredicate>> postconditions = { predicateC };
 	actions.push_back(std::make_shared<BaseAction>(preconditions, postconditions, costActionGoal1));
 
 	auto goal = std::make_shared<BaseGoal>(actions);
 	goals.push_back(goal);
 
-	preconditions = { predicateA };
+	preconditions = { predicateA->GetText() };
 	postconditions = { predicateC };
 	actions = {};
 	actions.push_back(std::make_shared<BaseAction>(preconditions, postconditions, costActionGoal2));

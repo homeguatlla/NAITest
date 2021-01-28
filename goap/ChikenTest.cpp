@@ -214,7 +214,7 @@ class EatAction : public BaseAction
 {
 public:
     EatAction(
-        const std::vector<std::shared_ptr<IPredicate>>& preConditions,
+        const std::vector<std::string>& preConditions,
         const std::vector<std::shared_ptr<IPredicate>>& postConditions,
         const std::weak_ptr<Chicken>& agent) :
         BaseAction(preConditions, postConditions),
@@ -260,7 +260,7 @@ public:
 
     void DoReset() override
     {
-        std::vector<std::shared_ptr<IPredicate>> preConditions = {std::make_shared<FoodPredicate>()};
+        std::vector<std::string> preConditions = {"FOOD"};
         std::vector<std::shared_ptr<IPredicate>> postConditions;
         const auto eatAction = std::make_shared<EatAction>(preConditions, postConditions, mChicken);
         mActions.push_back(eatAction);
@@ -354,7 +354,7 @@ class EscapeAction : public BaseAction
 {
 public:
     EscapeAction(
-        const std::vector<std::shared_ptr<IPredicate>>& preConditions,
+        const std::vector<std::string>& preConditions,
         const std::vector<std::shared_ptr<IPredicate>>& postConditions,
         const std::weak_ptr<Chicken>& agent) :
         BaseAction(preConditions, postConditions),
@@ -400,7 +400,7 @@ public:
 
     void DoReset() override
     {
-        std::vector<std::shared_ptr<IPredicate>> preConditions = {std::make_shared<EscapePredicate>()};
+        std::vector<std::string> preConditions = {"ESCAPE"};
         std::vector<std::shared_ptr<IPredicate>> postConditions;
         const auto dangerAction = std::make_shared<EscapeAction>(preConditions, postConditions, mChicken);
         mActions.push_back(dangerAction);
@@ -408,7 +408,7 @@ public:
 
     void DoAccomplished(std::vector<std::shared_ptr<IPredicate>>& predicates) override
     {
-        Utils::RemovePredicateWith(predicates, "DANGER");
+        Utils::RemovePredicateWith(predicates, "ESCAPE");
     }
 
     std::shared_ptr<IPredicate> DoTransformStimulusIntoPredicates(const ShortTermMemory<IStimulus>& memory) const override
