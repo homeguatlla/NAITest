@@ -21,9 +21,9 @@ TEST(NAI_Action, When_NoPredicates_Then_CostIsZero)
 
 TEST(NAI_Action, When_PredicatesDontSatisfyPreconditions_Then_EmptyList)
 {
-	auto predicateA = std::make_shared<BasePredicate>("A");
-	auto predicateB = std::make_shared<BasePredicate>("B");
-	auto predicateC = std::make_shared<BasePredicate>("C");
+	auto predicateA = std::make_shared<BasePredicate>(1, "A");
+	auto predicateB = std::make_shared<BasePredicate>(2, "B");
+	auto predicateC = std::make_shared<BasePredicate>(3, "C");
 
 	std::vector<std::string> preconditions { predicateA->GetText(), predicateC->GetText() };
 	std::vector<std::shared_ptr<IPredicate>> postconditions { predicateB };
@@ -40,9 +40,9 @@ TEST(NAI_Action, When_PredicatesDontSatisfyPreconditions_Then_EmptyList)
 
 TEST(NAI_Action, When_PredicatesSatisfyPreconditions_Then_ListOfPredicates)
 {
-	auto predicateA = std::make_shared<BasePredicate>("A");
-	auto predicateB = std::make_shared<BasePredicate>("B");
-	auto predicateC = std::make_shared<BasePredicate>("C");
+	auto predicateA = std::make_shared<BasePredicate>(1, "A");
+	auto predicateB = std::make_shared<BasePredicate>(2, "B");
+	auto predicateC = std::make_shared<BasePredicate>(3, "C");
 
 	std::vector<std::string> preconditions{ predicateA->GetText(), predicateC->GetText() };
 	std::vector<std::shared_ptr<IPredicate>> postconditions{ predicateB };

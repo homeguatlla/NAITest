@@ -36,7 +36,7 @@ public:
             [this](const ShortTermMemory<IStimulus>& memory)
             {
             	std::vector<std::shared_ptr<IPredicate>> result;
-            	result.push_back(std::make_shared<PlaceIamPredicate>("AtHome"));
+            	result.push_back(std::make_shared<PlaceIamPredicate>(1, "AtHome"));
             	
 				return result;
             });

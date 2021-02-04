@@ -16,9 +16,9 @@ using  namespace NAI::Goap;
 class FoodPredicate : public BasePredicate
 {
 public:
-    FoodPredicate() : BasePredicate("FOOD"), mPosition{0.0f}, mAmount{0} {};
+    FoodPredicate() : BasePredicate(1, "FOOD"), mPosition{0.0f}, mAmount{0} {};
 
-    FoodPredicate(const glm::vec3& position, unsigned int amount) : BasePredicate("FOOD"),
+    FoodPredicate(int id, const glm::vec3& position, unsigned int amount) : BasePredicate(id, "FOOD"),
     mPosition{position},
     mAmount{amount} {}
     
@@ -37,8 +37,8 @@ private:
 class EscapePredicate : public BasePredicate
 {
 public:
-    EscapePredicate() : BasePredicate("ESCAPE"), mEscapePosition(0.0f) {}
-    EscapePredicate(const glm::vec3& escapePosition) : BasePredicate("ESCAPE"), mEscapePosition(escapePosition) {}
+    EscapePredicate() : BasePredicate(2, "ESCAPE"), mEscapePosition(0.0f) {}
+    EscapePredicate(int id, const glm::vec3& escapePosition) : BasePredicate(id, "ESCAPE"), mEscapePosition(escapePosition) {}
     virtual ~EscapePredicate() = default;
     
     glm::vec3 GetEscapePoint() const { return mEscapePosition; }
@@ -47,10 +47,6 @@ public:
 private:
     glm::vec3 mEscapePosition;
 };
-
-std::shared_ptr<EscapePredicate> ESCAPE_PREDICATE = std::make_shared<EscapePredicate>();
-
-std::shared_ptr<FoodPredicate> FOOD_PREDICATE = std::make_shared<FoodPredicate>();
 
 class VisionStimulus : public IStimulus
 {
@@ -327,10 +323,7 @@ public:
             nearFood = foodStimulusList[0];
         }
 
-        FOOD_PREDICATE->SetPosition(nearFood->GetPosition());
-        FOOD_PREDICATE->SetAmount(nearFood->GetAmount());
-
-        return FOOD_PREDICATE;
+        return std::make_shared<FoodPredicate>(1, nearFood->GetPosition(), nearFood->GetAmount());
     }
 
 public:
@@ -441,8 +434,7 @@ public:
         }
         mChicken->SetInDanger();
         //This predicate is unique
-        ESCAPE_PREDICATE->SetEscapePoint(directionToEscape);
-        return ESCAPE_PREDICATE;
+        return std::make_shared<EscapePredicate>(2, directionToEscape);
     }
 
 public:

@@ -31,7 +31,7 @@ TEST(NAI_TreeGoalPlanner, When_PredicatesButNoGoals_Then_NoPlan)
 	std::vector<std::shared_ptr<IGoal>> goals;
 	std::vector<std::shared_ptr<IPredicate>> predicates;
 
-	predicates.push_back(std::make_shared<BasePredicate>("A"));
+	predicates.push_back(std::make_shared<BasePredicate>(1, "A"));
 
 	auto planner = std::make_shared<TreeGoapPlanner>();
 
@@ -45,9 +45,9 @@ TEST(NAI_TreeGoalPlanner, When_PredicatesAnGoalsButNoSatisfied_Then_NoPlan)
 	std::vector<std::shared_ptr<IGoal>> goals;
 	std::vector<std::shared_ptr<IPredicate>> predicates;
 
-	auto predicateA = std::make_shared<BasePredicate>("A");
-	auto predicateB = std::make_shared<BasePredicate>("B");
-	auto predicateC = std::make_shared<BasePredicate>("C");
+	auto predicateA = std::make_shared<BasePredicate>(1, "A");
+	auto predicateB = std::make_shared<BasePredicate>(2, "B");
+	auto predicateC = std::make_shared<BasePredicate>(3, "C");
 	predicates.push_back(predicateA);
 
 	std::vector<std::string> preconditions = { predicateB->GetText() };
@@ -70,8 +70,8 @@ TEST(NAI_TreeGoalPlanner, When_OnePredicateMatchesPreconditionOfAnActionOfOneAct
 	std::vector<std::shared_ptr<IPredicate>> predicates;
 	std::vector<std::shared_ptr<IGoal>> goals;
 
-	auto predicateA = std::make_shared<BasePredicate>("A");
-	auto predicateB = std::make_shared<BasePredicate>("B");
+	auto predicateA = std::make_shared<BasePredicate>(1, "A");
+	auto predicateB = std::make_shared<BasePredicate>(2, "B");
 	predicates.push_back(predicateA);
 
 	std::vector<std::string> preconditions = { predicateA->GetText() };
@@ -94,9 +94,9 @@ TEST(NAI_TreeGoalPlanner, When_OnePredicateChainsOneActionAndThatActionAnotherOf
 	std::vector<std::shared_ptr<IPredicate>> predicates;
 	std::vector<std::shared_ptr<IGoal>> goals;
 
-	auto predicateA = std::make_shared<BasePredicate>("A");
-	auto predicateB = std::make_shared<BasePredicate>("B");
-	auto predicateC = std::make_shared<BasePredicate>("C");
+	auto predicateA = std::make_shared<BasePredicate>(1, "A");
+	auto predicateB = std::make_shared<BasePredicate>(2, "B");
+	auto predicateC = std::make_shared<BasePredicate>(3, "C");
 
 	predicates.push_back(predicateA);
 
@@ -126,9 +126,9 @@ TEST(NAI_TreeGoalPlanner, When_TwoGoalsAreSatisfied_Then_LessCostGoalPlan)
 	int costActionGoal1 = 3;
 	int costActionGoal2 = 1;
 
-	auto predicateA = std::make_shared<BasePredicate>("A");
-	auto predicateB = std::make_shared<BasePredicate>("B");
-	auto predicateC = std::make_shared<BasePredicate>("C");
+	auto predicateA = std::make_shared<BasePredicate>(1, "A");
+	auto predicateB = std::make_shared<BasePredicate>(2, "B");
+	auto predicateC = std::make_shared<BasePredicate>(3, "C");
 
 	std::vector<std::shared_ptr<IGoal>> goals;
 
@@ -171,9 +171,9 @@ TEST(NAI_TreeGoalPlanner, When_WeWantAPlanThatSatisfiesAGivenPredicate_Then_Goal
 	int costActionGoal1 = 3;
 	int costActionGoal2 = 1;
 
-	auto predicateA = std::make_shared<BasePredicate>("A");
-	auto predicateB = std::make_shared<BasePredicate>("B");
-	auto predicateC = std::make_shared<BasePredicate>("C");
+	auto predicateA = std::make_shared<BasePredicate>(1, "A");
+	auto predicateB = std::make_shared<BasePredicate>(2, "B");
+	auto predicateC = std::make_shared<BasePredicate>(3, "C");
 
 	std::vector<std::shared_ptr<IGoal>> goals;
 
@@ -210,13 +210,13 @@ TEST(NAI_TreeGoalPlanner, When_WeWantAPlanThatSatisfiesAGivenPredicate_Then_Goal
 
 TEST(NAI_TreeGoalPlanner, When_WeWantAPlanThatSatisfiesAGivenPredicate_Then_LessCostGoalPlan)
 {
-	auto predicateA = std::make_shared<BasePredicate>("A");
-	auto predicateB = std::make_shared<BasePredicate>("B");
-	auto predicateC = std::make_shared<BasePredicate>("C");
-	auto predicateD = std::make_shared<BasePredicate>("D");
-	auto predicateE = std::make_shared<BasePredicate>("E");
-	auto predicateF = std::make_shared<BasePredicate>("F");
-	auto predicateG = std::make_shared<BasePredicate>("G");
+	auto predicateA = std::make_shared<BasePredicate>(1, "A");
+	auto predicateB = std::make_shared<BasePredicate>(2, "B");
+	auto predicateC = std::make_shared<BasePredicate>(3, "C");
+	auto predicateD = std::make_shared<BasePredicate>(4, "D");
+	auto predicateE = std::make_shared<BasePredicate>(5, "E");
+	auto predicateF = std::make_shared<BasePredicate>(6, "F");
+	auto predicateG = std::make_shared<BasePredicate>(7, "G");
 
 	auto action1 = CreateActionWith(
 		{predicateA->GetText()},
@@ -286,13 +286,13 @@ TEST(NAI_TreeGoalPlanner, When_WeWantAPlanThatSatisfiesAGivenPredicate_Then_Less
 
 TEST(NAI_TreeGoalPlanner, When_WeWantAPlanThatSatisfiesAGivenPredicateWithMoreThanOneGoal_Then_LessCostGoalPlan)
 {
-	auto predicateA = std::make_shared<BasePredicate>("A");
-	auto predicateB = std::make_shared<BasePredicate>("B");
-	auto predicateC = std::make_shared<BasePredicate>("C");
-	auto predicateD = std::make_shared<BasePredicate>("D");
-	auto predicateE = std::make_shared<BasePredicate>("E");
-	auto predicateF = std::make_shared<BasePredicate>("F");
-	auto predicateG = std::make_shared<BasePredicate>("G");
+	auto predicateA = std::make_shared<BasePredicate>(1, "A");
+	auto predicateB = std::make_shared<BasePredicate>(2, "B");
+	auto predicateC = std::make_shared<BasePredicate>(3, "C");
+	auto predicateD = std::make_shared<BasePredicate>(4, "D");
+	auto predicateE = std::make_shared<BasePredicate>(5, "E");
+	auto predicateF = std::make_shared<BasePredicate>(6, "F");
+	auto predicateG = std::make_shared<BasePredicate>(7, "G");
 
 	auto action1 = CreateActionWith(
 		{ predicateA->GetText() },

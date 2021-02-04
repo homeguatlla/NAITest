@@ -48,8 +48,8 @@ public:
 		ON_CALL(*this, GetPlan).WillByDefault(
 		[this](	std::vector<std::shared_ptr<IGoal>>& goals,	std::vector<std::shared_ptr<IPredicate>>& predicates)
 		{
-			auto predicateA = std::make_shared<BasePredicate>("A");
-			auto predicateB = std::make_shared<BasePredicate>("B");
+			auto predicateA = std::make_shared<BasePredicate>(1, "A");
+			auto predicateB = std::make_shared<BasePredicate>(2, "B");
 
 			std::vector<std::string> preconditions = { predicateA->GetText() };
 			std::vector<std::shared_ptr<IPredicate>> postconditions = { predicateB };
@@ -65,7 +65,7 @@ public:
 			std::vector<std::shared_ptr<IPredicate>>& predicates,
 			std::vector<std::shared_ptr<IPredicate>>& desiredPredicates)
 			{
-				auto predicateA = std::make_shared<BasePredicate>("A");
+				auto predicateA = std::make_shared<BasePredicate>(1, "A");
 
 				std::vector<std::string> preconditions = { predicateA->GetText() };
 				std::vector<std::shared_ptr<IPredicate>> postconditions = desiredPredicates;
@@ -96,9 +96,9 @@ class TwoActionGoapPlannerMock : public IGoapPlanner
 public:
 	TwoActionGoapPlannerMock()
 	{
-		predicateA = std::make_shared<BasePredicate>("A");
-		predicateB = std::make_shared<BasePredicate>("B");
-		predicateC = std::make_shared<BasePredicate>("C");
+		predicateA = std::make_shared<BasePredicate>(1, "A");
+		predicateB = std::make_shared<BasePredicate>(2, "B");
+		predicateC = std::make_shared<BasePredicate>(3, "C");
 
 		ON_CALL(*this, GetPlan).WillByDefault(
 			[this](std::vector<std::shared_ptr<IGoal>>& goals, std::vector<std::shared_ptr<IPredicate>>& predicates)
@@ -121,7 +121,7 @@ public:
 				std::vector<std::shared_ptr<IPredicate>>& predicates,
 				std::vector<std::shared_ptr<IPredicate>>& desiredPredicates)
 			{
-				auto predicateA = std::make_shared<BasePredicate>("A");
+				auto predicateA = std::make_shared<BasePredicate>(1, "A");
 
 				std::vector<std::string> preconditions = { predicateA->GetText() };
 				std::vector<std::shared_ptr<IPredicate>> postconditions = desiredPredicates;
@@ -189,7 +189,7 @@ public:
 		ON_CALL(*this, TransformStimulusIntoPredicates).WillByDefault(
             [this](const ShortTermMemory<IStimulus>& memory)
             {
-                return std::make_shared<BasePredicate>("PredicateA");
+                return std::make_shared<BasePredicate>(1, "PredicateA");
             });
 	}
 	virtual ~GoalAcceptanceHearingStimulusMock() = default;
@@ -309,7 +309,7 @@ TEST(NAI_Agent, When_ProcessingAndPlanAborted_Then_Planning)
 	
 	AgentBuilder agentBuilder;
 	auto agent =	agentBuilder.WithGoapPlanner(goapPlannerMock)
-                                            .WithPredicate(std::make_shared<BasePredicate>("D"))
+                                            .WithPredicate(std::make_shared<BasePredicate>(4, "D"))
                                             .Build<AgentMock>();
 	ASSERT_FALSE(agent->HasPredicate(goapPlannerMock->predicateC->GetID()));
 

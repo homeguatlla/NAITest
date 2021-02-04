@@ -21,14 +21,14 @@ using ::testing::NiceMock;
 class PermanentPredicate : public BasePredicate
 {
 public:
-	PermanentPredicate() : BasePredicate("PermanentPredicate") {}
+	PermanentPredicate() : BasePredicate(1, "PermanentPredicate") {}
 	virtual ~PermanentPredicate() = default;
 };
 
 class DynamicPredicate : public BasePredicate
 {
 public:
-	DynamicPredicate(int v) : BasePredicate("DynamicPredicate"), mValue{v} {}
+	DynamicPredicate(int v) : BasePredicate(2, "DynamicPredicate"), mValue{v} {}
 	virtual ~DynamicPredicate() = default;
 
 	int GetValue() const { return mValue; }
@@ -129,7 +129,7 @@ protected:
 		memory.PerformActionForEach(
 			[&predicate](std::shared_ptr<IStimulus> stimulus) -> bool
 			{
-				predicate =  std::make_shared<BasePredicate>("InstantPredicate");
+				predicate =  std::make_shared<BasePredicate>(3, "InstantPredicate");
 				return true;
 			});
 

@@ -202,7 +202,7 @@ TEST(NAI_GoToGoalTest, When_AgentHasToGo_Then_Arrives)
 	AgentBuilder agentBuilder;
 	auto agent =	agentBuilder.WithGoapPlanner(goapPlanner)
 								.WithGoal(std::make_shared<NiceMock<GoToGoalMock>>(navigationPlanner))
-								.WithPredicate(std::make_shared<GoToPredicate>("GoTo", destinationPlaceName))
+								.WithPredicate(std::make_shared<GoToPredicate>(1, "GoTo", destinationPlaceName))
 								.Build<AgentWalkerMock>();
 	auto agentWalker = std::static_pointer_cast<AgentWalkerMock>(agent);
 	
@@ -237,7 +237,7 @@ TEST(NAI_GoToGoalTest, When_AgentHasToGoAndNewPredicate_Then_Abort)
 	AgentBuilder agentBuilder;
 	auto agent =	agentBuilder.WithGoapPlanner(goapPlanner)
                                 .WithGoal(goal)
-                                .WithPredicate(std::make_shared<GoToPredicate>("GoTo", destinationPlaceName))
+                                .WithPredicate(std::make_shared<GoToPredicate>(1, "GoTo", destinationPlaceName))
                                 .Build<AgentWalkerMock>();
 	auto agentWalker = std::static_pointer_cast<AgentWalkerMock>(agent);
 	
@@ -254,7 +254,7 @@ TEST(NAI_GoToGoalTest, When_AgentHasToGoAndNewPredicate_Then_Abort)
 	ASSERT_TRUE(agent->GetPosition() == glm::vec3(5.0f, 0.0f, 5.63999939f));
 	EXPECT_CALL(*goal, DoCancel).Times(1);
 
-	agent->OnNewPredicate(std::make_shared<BasePredicate>("NewPredicate"));
+	agent->OnNewPredicate(std::make_shared<BasePredicate>(2, "NewPredicate"));
 	agent->Update(0.016f);
 
 	ASSERT_TRUE(agent->GetPosition() == glm::vec3(5.0f, 0.0f, 5.63999939f));
@@ -278,7 +278,7 @@ TEST(NAI_GoToGoalTest, When_AgentHasToGoAndNewPredicate_Then_AbortAndRestartsThe
 	AgentBuilder agentBuilder;
 	auto agent =	agentBuilder.WithGoapPlanner(goapPlanner)
                                 .WithGoal(goal)
-                                .WithPredicate(std::make_shared<GoToPredicate>("GoTo", destinationPlaceName))
+                                .WithPredicate(std::make_shared<GoToPredicate>(1, "GoTo", destinationPlaceName))
                                 .Build<AgentWalkerMock>();
 	auto agentWalker = std::static_pointer_cast<AgentWalkerMock>(agent);
 	
@@ -295,7 +295,7 @@ TEST(NAI_GoToGoalTest, When_AgentHasToGoAndNewPredicate_Then_AbortAndRestartsThe
 	ASSERT_TRUE(agent->GetPosition() == glm::vec3(5.0f, 0.0f, 5.63999939f));
 	EXPECT_CALL(*goal, DoCancel).Times(1);
 
-	agent->OnNewPredicate(std::make_shared<BasePredicate>("NewPredicate"));
+	agent->OnNewPredicate(std::make_shared<BasePredicate>(2, "NewPredicate"));
 	
 	for (auto i = 0; i < 80; ++i)
 	{
@@ -321,8 +321,8 @@ TEST(NAI_GoToGoalTest, When_AgentHasTwoPlacesToGo_Then_ArrivesAtPlaceWithLessCos
 	AgentBuilder agentBuilder;
 	auto agent =	agentBuilder.WithGoapPlanner(goapPlanner)
                                 .WithGoal(std::make_shared<NiceMock<GoToGoalMock>>(navigationPlanner))
-                                .WithPredicate(std::make_shared<GoToPredicate>("GoTo", destinationPlaceSaloonName))
-								.WithPredicate(std::make_shared<GoToPredicate>("GoTo", destinationPlaceGeneralStoreName))
+                                .WithPredicate(std::make_shared<GoToPredicate>(1, "GoTo", destinationPlaceSaloonName))
+								.WithPredicate(std::make_shared<GoToPredicate>(2, "GoTo", destinationPlaceGeneralStoreName))
                                 .Build<AgentWalkerMock>();
 	auto agentWalker = std::static_pointer_cast<AgentWalkerMock>(agent);
 	
@@ -363,7 +363,7 @@ TEST(NAI_GoToGoalTest, When_AgentArrivedAtPlace_GoToPlanningAndNoPlan)
 	AgentBuilder agentBuilder;
 	auto agent =	agentBuilder.WithGoapPlanner(goapPlanner)
                                 .WithGoal(std::make_shared<NiceMock<GoToGoalMock>>(navigationPlanner))
-                                .WithPredicate(std::make_shared<GoToPredicate>("GoTo", destinationPlaceGeneralStoreName))
+                                .WithPredicate(std::make_shared<GoToPredicate>(1, "GoTo", destinationPlaceGeneralStoreName))
                                 .Build<AgentWalkerMock>();
 	auto agentWalker = std::static_pointer_cast<AgentWalkerMock>(agent);
 	
