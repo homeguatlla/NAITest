@@ -112,17 +112,22 @@ class NavigationPlannerMock: public INavigationPlanner
 public:
 	NavigationPlannerMock(const std::vector<glm::vec3>& path) : mPath {path}
 	{
-		ON_CALL(*this, GetLocationGivenAName).WillByDefault(
-			[this](const std::string& locationName)
+		ON_CALL(*this, FillWithLocationGivenAName).WillByDefault(
+			[this](const std::string& locationName, glm::vec3& location) -> bool
 			{
 				if (locationName == "Saloon")
 				{
-					return glm::vec3(10, 0, 10);
+					location = glm::vec3(10, 0, 10);
+				}
+				else if(locationName == "GeneralStore")
+				{
+					location = glm::vec3(7, 1, 10);
 				}
 				else
 				{
-					return glm::vec3(7, 1, 10);
+					return false;
 				}
+				return true;
 			});
 
 		ON_CALL(*this, GetPathFromTo).WillByDefault(
@@ -151,7 +156,7 @@ public:
 	}
 	virtual ~NavigationPlannerMock() = default;
 
-	MOCK_CONST_METHOD1(GetLocationGivenAName, glm::vec3(const std::string&));
+	MOCK_CONST_METHOD2(FillWithLocationGivenAName, bool(const std::string&, glm::vec3&));
 	MOCK_METHOD3(GetPathFromTo, void(const glm::vec3&, const glm::vec3&, PathFromToCallback));
 	MOCK_CONST_METHOD2(GetAproxCost, unsigned int(const glm::vec3& origin, const glm::vec3& destination));
 
@@ -218,7 +223,43 @@ TEST(NAI_GoToGoalTest, When_AgentHasToGo_Then_Arrives)
 	}
 
 	ASSERT_TRUE(agent->WhereIam() == "Saloon");
-	ASSERT_TRUE(glm::distance(agent->GetPosition(), navigationPlanner->GetLocationGivenAName(destinationPlaceName)) < MOVEMENT_PRECISION);
+	glm::vec3 location;
+	const auto hasLocation = navigationPlanner->FillWithLocationGivenAName(destinationPlaceName, location);
+	ASSERT_TRUE(glm::distance(agent->GetPosition(),  location) < MOVEMENT_PRECISION);
+}
+
+TEST(NAI_GoToGoalTest, When_AgentHasToGoToPosition_Then_Arrives)
+{
+	std::vector<glm::vec3> path;
+	path.emplace_back(glm::vec3(0, 0, 5));
+	path.emplace_back(glm::vec3(5, 0, 5));
+	path.emplace_back(glm::vec3(5, 0, 10));
+
+	const auto goapPlanner = std::make_shared<NiceMock<DirectGoapPlanner>>();
+	auto navigationPlanner = std::make_shared<NiceMock<NavigationPlannerMock>>(path);
+
+	auto position = glm::vec3(5, 0, 10);
+
+	AgentBuilder agentBuilder;
+	auto agent =	agentBuilder.WithGoapPlanner(goapPlanner)
+                                .WithGoal(std::make_shared<NiceMock<GoToGoalMock>>(navigationPlanner))
+                                .WithPredicate(std::make_shared<GoToPredicate>(1, "GoTo", position ))
+                                .Build<AgentWalkerMock>();
+	auto agentWalker = std::static_pointer_cast<AgentWalkerMock>(agent);
+	
+	const glm::vec3 originPoint(0.0f);
+	const auto speed = 10.f;
+	agentWalker->SetParameters(originPoint, speed);
+	
+	agent->StartUp();
+	
+	for(auto i = 0; i < 936; ++i)
+	{
+		agent->Update(0.016f);
+	}
+
+	ASSERT_TRUE(agent->WhereIam() == "vec3(5.000000, 0.000000, 10.000000)");
+	ASSERT_TRUE(glm::distance(agent->GetPosition(), position) < MOVEMENT_PRECISION);
 }
 
 TEST(NAI_GoToGoalTest, When_AgentHasToGoAndNewPredicate_Then_Abort)
@@ -302,7 +343,10 @@ TEST(NAI_GoToGoalTest, When_AgentHasToGoAndNewPredicate_Then_AbortAndRestartsThe
 		agent->Update(0.016f);
 	}
 
-	ASSERT_TRUE(glm::distance(agent->GetPosition(), navigationPlanner->GetLocationGivenAName(destinationPlaceName)) < MOVEMENT_PRECISION);
+	glm::vec3 destination;
+	navigationPlanner->FillWithLocationGivenAName(destinationPlaceName, destination);
+	
+	ASSERT_TRUE(glm::distance(agent->GetPosition(), destination) < MOVEMENT_PRECISION);
 	ASSERT_TRUE(agent->WhereIam() == destinationPlaceName);
 	ASSERT_TRUE(agent->GetCurrentState() == AgentState::STATE_PLANNING);
 }
@@ -343,10 +387,10 @@ TEST(NAI_GoToGoalTest, When_AgentHasTwoPlacesToGo_Then_ArrivesAtPlaceWithLessCos
 	}
 
 	const std::string destinationPlaceName("GeneralStore");
-	ASSERT_TRUE(
-		glm::distance(
-			agent->GetPosition(), 
-			navigationPlanner->GetLocationGivenAName(destinationPlaceName)) < MOVEMENT_PRECISION);
+	glm::vec3 destination;
+	navigationPlanner->FillWithLocationGivenAName(destinationPlaceName, destination);
+	
+	ASSERT_TRUE(glm::distance(agent->GetPosition(), destination) < MOVEMENT_PRECISION);
 	ASSERT_TRUE(agent->WhereIam() == "GeneralStore");
 }
 
@@ -378,7 +422,11 @@ TEST(NAI_GoToGoalTest, When_AgentArrivedAtPlace_GoToPlanningAndNoPlan)
 		agent->Update(0.016f);
 	}
 
-	ASSERT_TRUE(glm::distance(agent->GetPosition(), navigationPlanner->GetLocationGivenAName(destinationPlaceGeneralStoreName)) < MOVEMENT_PRECISION);
+	const std::string destinationPlaceName("GeneralStore");
+	glm::vec3 destination;
+	navigationPlanner->FillWithLocationGivenAName(destinationPlaceName, destination);
+	
+	ASSERT_TRUE(glm::distance(agent->GetPosition(), destination) < MOVEMENT_PRECISION);
 	ASSERT_TRUE(agent->WhereIam() == destinationPlaceGeneralStoreName);
 
 	agent->Update(0.016f);
