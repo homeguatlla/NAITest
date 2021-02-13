@@ -14,6 +14,8 @@
 #include "navigation/INavigationPath.h"
 #include <memory>
 
+
+#include "goap/GoapUtils.h"
 #include "goap/agent/AgentBuilder.h"
 
 
@@ -169,6 +171,11 @@ class GoToGoalMock : public GoToGoal
 public:
 	GoToGoalMock(std::shared_ptr<INavigationPlanner> planner) : GoToGoal(planner)
 	{
+		ON_CALL(*this, DoCancel).WillByDefault(
+            [this](std::vector<std::shared_ptr<IPredicate>>& predicates)
+            {
+               Utils::RemovePredicateWith(predicates, "GotPath");
+            });
 	}
 	MOCK_METHOD1(DoCancel, void(std::vector<std::shared_ptr<IPredicate>>& predicates));
 };
@@ -301,7 +308,7 @@ TEST(NAI_GoToGoalTest, When_AgentHasToGoAndNewPredicate_Then_Abort)
 	ASSERT_TRUE(agent->GetPosition() == glm::vec3(5.0f, 0.0f, 5.63999939f));
 	ASSERT_FALSE(agent->WhereIam() == destinationPlaceName);
 	ASSERT_TRUE(agent->GetCurrentState() == AgentState::STATE_PLANNING);
-	ASSERT_TRUE(agent->GetPredicates().size() == 3);
+	ASSERT_TRUE(agent->GetPredicates().size() == 2);
 }
 
 TEST(NAI_GoToGoalTest, When_AgentHasToGoAndNewPredicate_Then_AbortAndRestartsTheSameGoal)
@@ -479,6 +486,61 @@ TEST(NAI_GoToGoalTest, When_AgentHasToGoAndNewPredicate_Then_AbortAndRestartsThe
 	}
 
 	ASSERT_TRUE(agent->GetPredicates().size() == 2);
+	ASSERT_TRUE(glm::distance(agent->GetPosition(), destination) < MOVEMENT_PRECISION);
+	ASSERT_TRUE(agent->WhereIam() == destinationPlaceName);
+	ASSERT_TRUE(agent->GetCurrentState() == AgentState::STATE_PLANNING);
+}
+
+void LogoutPredicates(int counter, const std::vector<std::shared_ptr<IPredicate>>& predicates)
+{
+	std::cout << "Predicates " << counter <<":" << std::endl<< std::endl;
+	for(auto&& predicate : predicates)
+	{
+		std::cout << "		" <<predicate->GetFullText() << std::endl;
+	}
+	std::cout << std::endl;
+}
+
+TEST(NAI_GoToGoalTest, When_AgentHasToGoAndNewPredicates_Then_IsNotAccumulatingGotPathAndGoTos)
+{
+	std::vector<glm::vec3> path;
+	path.emplace_back(glm::vec3(0, 0, 5));
+	path.emplace_back(glm::vec3(5, 0, 5));
+	path.emplace_back(glm::vec3(5, 0, 10));
+	
+	const auto goapPlanner = std::make_shared<NiceMock<TreeGoapPlanner>>();
+	auto navigationPlanner = std::make_shared<NiceMock<NavigationPlannerMock>>(path);
+
+	const auto goal = std::make_shared<NiceMock<GoToGoalMock>>(navigationPlanner);
+	
+	AgentBuilder agentBuilder;
+	auto destination = glm::vec3(5, 0, 10);
+	auto predicate = std::make_shared<GoToPredicate>(1, "GoTo", destination);
+	auto destinationPlaceName = predicate->GetPlaceName();
+	auto agent =	agentBuilder.WithGoapPlanner(goapPlanner)
+                                            .WithGoal(goal)
+                                            .WithPredicate(predicate)
+                                            .Build<AgentWalkerMock>();
+	auto agentWalker = std::static_pointer_cast<AgentWalkerMock>(agent);
+	
+	const glm::vec3 originPoint(0.0f);
+	const auto speed = 10.f;
+	agentWalker->SetParameters(originPoint, speed);
+	
+	agent->StartUp();
+
+	for (auto i = 0; i < 250; ++i)
+	{
+		agent->Update(0.016f);
+		if(i%13 == 0)
+		{
+			agent->OnNewPredicate(std::make_shared<BasePredicate>(2+i, "NewPredicate"));
+		}
+
+		//LogoutPredicates(i, agent->GetPredicates());
+	}
+
+	ASSERT_TRUE(agent->GetPredicates().size() == 21); //20 new predicates + 1 PlaceIam
 	ASSERT_TRUE(glm::distance(agent->GetPosition(), destination) < MOVEMENT_PRECISION);
 	ASSERT_TRUE(agent->WhereIam() == destinationPlaceName);
 	ASSERT_TRUE(agent->GetCurrentState() == AgentState::STATE_PLANNING);

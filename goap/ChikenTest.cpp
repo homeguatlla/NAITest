@@ -254,7 +254,12 @@ public:
         Reset();
     }
 
-    void DoReset() override
+    void DoReset(std::vector<std::shared_ptr<IPredicate>>& predicates) override
+    {
+        Reset();
+    }
+
+    void Reset()
     {
         std::vector<std::string> preConditions = {"FOOD"};
         std::vector<std::shared_ptr<IPredicate>> postConditions;
@@ -391,7 +396,12 @@ public:
         Reset();
     }
 
-    void DoReset() override
+    void DoReset(std::vector<std::shared_ptr<IPredicate>>& predicates) override
+    {
+       Reset();
+    }
+
+    void Reset()
     {
         std::vector<std::string> preConditions = {"ESCAPE"};
         std::vector<std::shared_ptr<IPredicate>> postConditions;
@@ -489,12 +499,6 @@ TEST(Chiken, When_ChickenHasFoodNear_Then_Eat)
 
     ASSERT_TRUE(chicken->HasHungry());
 
-    //TODO este test falla porque se está agregando un predicado de comida a cada frame y entonces
-    //llega como una nueva notificación al agente y pasa de Plan -> Process -> new predicate -> Plan
-    //no dejando procesar. El predicado que se crea de comida tiene que ser siempre el mismo para el mismo estímulo
-    //de alguna manera tenemos que poder asociar un estimulo nuevo a un mismo elemento de memoria y por tanto un mismo
-    //predicado. MMM... no sé ahora como.
-    
     chicken->StartUp();
     chicken->Update(0.16f); //setting current state
     chicken->Update(0.16f);
