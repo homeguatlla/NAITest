@@ -165,6 +165,74 @@ TEST(NAI_TreeGoalPlanner, When_MoreThanOnePredicateSatisfyTheSameGoal_LessCostGo
 
 }
 
+TEST(NAI_TreeGoalPlanner, When_OneGoalMultipleActions_And_OneActionCanNotBeSatisfied_Then_NoPlan)
+{
+	const auto predicateA = std::make_shared<BasePredicate>(1, "A");
+	const auto predicateB = std::make_shared<BasePredicate>(2, "B");
+	const auto predicateC = std::make_shared<BasePredicate>(3, "C");
+	const auto predicateD = std::make_shared<BasePredicate>(4, "D");
+	const auto predicateE = std::make_shared<BasePredicate>(5, "E");
+
+	std::vector<std::shared_ptr<IGoal>> goals;
+
+	std::vector<std::shared_ptr<IAction>> actions;
+	std::vector<std::string> preconditions = { predicateD->GetText(), predicateA->GetText() };
+	std::vector<std::shared_ptr<IPredicate>> postconditions = { predicateE };
+	actions.push_back(std::make_shared<BaseAction>(preconditions, postconditions, 1));
+
+	preconditions = { predicateB->GetText() };
+	postconditions = { predicateD };
+	actions.push_back(std::make_shared<BaseAction>(preconditions, postconditions, 1));
+	
+	auto goal = std::make_shared<BaseGoal>(actions);
+	goals.push_back(goal);
+
+	auto planner = std::make_shared<TreeGoapPlanner>();
+
+	std::vector<std::shared_ptr<IPredicate>> predicates;
+	predicates.push_back(predicateB);
+
+	const auto plan = planner->GetPlan(goals, predicates);
+
+	ASSERT_TRUE(!plan);
+}
+
+TEST(NAI_TreeGoalPlanner, When_OneGoalMultipleActions_And_ActionsCanBeSatisfied_Then_Plan_And_ThePredicatesAcceptanceGoFirst)
+{
+	const auto predicateA = std::make_shared<BasePredicate>(1, "A");
+	const auto predicateB = std::make_shared<BasePredicate>(2, "B");
+	const auto predicateC = std::make_shared<BasePredicate>(3, "C");
+	const auto predicateD = std::make_shared<BasePredicate>(4, "D");
+	const auto predicateE = std::make_shared<BasePredicate>(5, "E");
+	const auto predicateF = std::make_shared<BasePredicate>(6, "F");
+
+	std::vector<std::shared_ptr<IGoal>> goals;
+
+	std::vector<std::shared_ptr<IAction>> actions;
+	std::vector<std::string> preconditions = { predicateD->GetText(), predicateA->GetText() };
+	std::vector<std::shared_ptr<IPredicate>> postconditions = { predicateE };
+	actions.push_back(std::make_shared<BaseAction>(preconditions, postconditions, 1));
+
+	preconditions = { predicateB->GetText() };
+	postconditions = { predicateD };
+	actions.push_back(std::make_shared<BaseAction>(preconditions, postconditions, 1));
+	
+	auto goal = std::make_shared<BaseGoal>(actions);
+	goals.push_back(goal);
+
+	auto planner = std::make_shared<TreeGoapPlanner>();
+
+	std::vector<std::shared_ptr<IPredicate>> predicates;
+	predicates.push_back(predicateF);
+	predicates.push_back(predicateA);
+	predicates.push_back(predicateB);
+
+	auto plan = planner->GetPlan(goals, predicates);
+
+	ASSERT_TRUE(plan);
+	ASSERT_TRUE(predicates[0] == predicateB);
+	ASSERT_TRUE(predicates[1] == predicateF);
+}
 
 TEST(NAI_TreeGoalPlanner, When_WeWantAPlanThatSatisfiesAGivenPredicate_Then_GoalPlan)
 {

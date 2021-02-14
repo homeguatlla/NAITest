@@ -385,11 +385,7 @@ TEST(NAI_GoToGoalTest, When_AgentHasTwoPlacesToGo_Then_ArrivesAtPlaceWithLessCos
 	
 	agent->StartUp();
 
-	//from 0,0,0 to 0, 0, 5 = dist  = 5 /0.016 = 312 speed = 10 --> 35 frames (no cuadra +3)
-	//from 0, 0, 5 to 7, 1, 10 = dist = 8.66 / 0.016 = 541.2 speed 10 --> 55 frames
-	//total 35 + 55 = 87 frames
-
-	//we put the number of frames to make agent stops at General Store, more frame it will continue walking.
+	//we put the number of frames to make agent stops at General Store, more frame it will continue walking to the Saloon.
 	for (auto i = 0; i < 93; ++i)
 	{
 		agent->Update(0.016f);
@@ -478,7 +474,7 @@ TEST(NAI_GoToGoalTest, When_AgentHasToGoAndNewPredicate_Then_AbortAndRestartsThe
 	ASSERT_TRUE(agent->GetPosition() == glm::vec3(5.0f, 0.0f, 5.63999939f));
 	EXPECT_CALL(*goal, DoCancel).Times(1);
 
-	agent->OnNewPredicate(std::make_shared<BasePredicate>(2, "NewPredicate"));
+	agent->OnNewPredicate(std::make_shared<BasePredicate>(20, "NewPredicate"));
 	
 	for (auto i = 0; i < 180; ++i)
 	{
@@ -534,7 +530,7 @@ TEST(NAI_GoToGoalTest, When_AgentHasToGoAndNewPredicates_Then_IsNotAccumulatingG
 		agent->Update(0.016f);
 		if(i%13 == 0)
 		{
-			agent->OnNewPredicate(std::make_shared<BasePredicate>(2+i, "NewPredicate"));
+			agent->OnNewPredicate(std::make_shared<BasePredicate>(20+i, "NewPredicate"));
 		}
 
 		//LogoutPredicates(i, agent->GetPredicates());
