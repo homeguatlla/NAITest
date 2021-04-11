@@ -24,6 +24,7 @@ public:
 	{
 		
 	}
+	
 	AgentCognitiveMock(
 		std::shared_ptr<NAI::Goap::IGoapPlanner> planner,
 		const std::vector<std::shared_ptr<IGoal>>& goals,
@@ -45,6 +46,14 @@ public:
             {
             	mHasReceivedNewPredicate = true;
             });
+		ON_CALL(*this, GetPredicatesIdsToRemove).WillByDefault(
+            [this]()
+            {
+                std::vector<int> result;
+                result.push_back(1);
+            	
+                return result;
+            });
 	}
 	
 	virtual ~AgentCognitiveMock() = default;
@@ -55,6 +64,7 @@ public:
 
 	MOCK_METHOD1(OnNewPredicate, void(std::shared_ptr<IPredicate>));
 	MOCK_CONST_METHOD1(TransformStimulusIntoPredicates, const std::vector<std::shared_ptr<IPredicate>>(const ShortTermMemory<IStimulus>&));
+	MOCK_CONST_METHOD0(GetPredicatesIdsToRemove, std::vector<int>());
 
 private:
 	bool mHasReceivedNewPredicate;
@@ -93,8 +103,24 @@ TEST(NAI_CognitiveSystem, When_Update_AndMemoryNotEmpty_AndGoalsAcceptingStimulu
 	
 	cognitiveSystem.Update(0.16f, memory, agent);
 
-	auto agentCognitive = std::static_pointer_cast<AgentCognitiveMock>(agent);
+	const auto agentCognitive = std::static_pointer_cast<AgentCognitiveMock>(agent);
 	
 	//EXPECT_CALL(*agent, OnNewPredicate).Times(1);
 	ASSERT_TRUE(agentCognitive->HasNewPredicate());
+}
+
+TEST(NAI_CognitiveSystem, When_Update_AndPredicates_AndRemovingIds_Then_PredicatesRemoved)
+{
+	CognitiveSystem cognitiveSystem;
+	const auto goapPlanner = std::make_shared<TreeGoapPlanner>();
+	
+	AgentBuilder agentBuilder;
+	const auto agent =	agentBuilder.WithGoapPlanner(goapPlanner)
+									.WithPredicate(std::make_shared<BasePredicate>(1, "Predicate to be removed" ))
+									.Build<AgentCognitiveMock>();
+
+	MemoryMock memory;
+	ASSERT_TRUE(agent->GetPredicates().size() == 1);
+	cognitiveSystem.Update(0.16f, memory, agent);
+	ASSERT_TRUE(agent->GetPredicates().size() == 0);
 }
