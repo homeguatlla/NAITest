@@ -332,7 +332,7 @@ public:
     }
 
 public:
-    unsigned GetCost(std::vector<std::shared_ptr<IPredicate>>& inputPredicates) const override
+    unsigned GetCost(std::vector<std::shared_ptr<IPredicate>>& inputPredicates, std::vector<std::shared_ptr<IPredicate>>& accomplishedPredicates) const override
     {
         //We know there is always only one predicate into the list.
         if(!mChicken->HasHungry())
@@ -340,7 +340,7 @@ public:
             return std::numeric_limits<unsigned>::max();
         }
         
-        const auto foodPredicate = std::static_pointer_cast<FoodPredicate>(inputPredicates[0]);
+        const auto foodPredicate = std::static_pointer_cast<FoodPredicate>(accomplishedPredicates[0]);
         return static_cast<unsigned int>(glm::distance(mChicken->GetPosition(), foodPredicate->GetPosition()));
     }
 
@@ -448,7 +448,7 @@ public:
     }
 
 public:
-    unsigned GetCost(std::vector<std::shared_ptr<IPredicate>>& inputPredicates) const override
+    unsigned GetCost(std::vector<std::shared_ptr<IPredicate>>& inputPredicates, std::vector<std::shared_ptr<IPredicate>>& accomplishedPredicates) const override
     {
         //We know there is always only one predicate into the list.
         if(mChicken->IsSave())
@@ -456,7 +456,7 @@ public:
             return std::numeric_limits<unsigned>::max();
         }
         
-        const auto escapePredicate = std::static_pointer_cast<EscapePredicate>(inputPredicates[0]);
+        const auto escapePredicate = std::static_pointer_cast<EscapePredicate>(accomplishedPredicates[0]);
         return 1;
     }
 
